@@ -154,3 +154,8 @@ Nein, offizielle, vom Lehrer gestempelte und korrigierte Klausuren unterliegen d
 
 **Ich verstehe die Foren immer noch nicht – was jetzt?**
 Keine Panik! Komm einfach in den `#allgemein` Chat und frag nach Hilfe. Es ist immer jemand da, der dir kurz erklärt, wie du etwas hochladen oder finden kannst. Wir helfen uns gegenseitig!
+
+---
+> **🤖 Hinweis zur Entstehung:** 
+> Die Struktur, Ausformulierung und Formatierung dieses Konzepts wurden zur besseren Übersichtlichkeit mit Unterstützung von Künstlicher Intelligenz (KI) ausgearbeitet. Die grundlegenden Ideen, Anforderungen und Entscheidungen stammen jedoch zu 100 % von den Lernenden und wurden manuell geprüft.
+---
