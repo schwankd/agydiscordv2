@@ -117,3 +117,40 @@ Bevor Lernende den Server betreten können, müssen sie in einem Pop-up diesen R
 > * [LernSax / Schul-Cloud](https://Beispiel-Link.de)
 > * [Vertretungsplan](https://Beispiel-Link.de)
 > * [Offizielles BAföG-Portal](https://Beispiel-Link.de)
+
+## 📖 6. Begriffserklärung (Glossar)
+
+Für alle, die Discord bisher nicht genutzt haben oder sich mit den Begriffen noch schwertun, hier eine kurze Übersetzung der wichtigsten Funktionen:
+
+*   **Server:** Unser digitaler Treffpunkt. Man kann es sich wie das gesamte Schulgebäude des AGY im Internet vorstellen.
+*   **Kanal (Channel):** Ein einzelner Raum innerhalb unseres Servers. Es gibt **Textkanäle** (wie ein virtuelles Klassenzimmer, in dem alle chatten) und **Foren**.
+*   **Forum:** Ein spezieller Kanal, der nicht für wilde Chats gedacht ist, sondern wie ein digitales, gut sortiertes schwarzes Brett funktioniert. Perfekt, um Lernzettel und Zusammenfassungen hochzuladen, ohne dass sie im Chat-Verlauf verschwinden.
+*   **Tag (Etikett):** Ein Schlagwort, das man an seinen Foren-Beitrag heften muss (z. B. `[E-Phase]` oder `[Klausur]`). Dadurch können andere Lernende das Forum filtern und finden sofort, was sie suchen.
+*   **Rolle:** Ein virtuelles Namensschild oder eine Mitgliedschaft (z. B. `@E-Phase` oder `@Lernende`). Rollen legen fest, welche Farbe dein Name hat, welche Kanäle du sehen kannst und welche Rechte du besitzt.
+*   **Onboarding:** Der Fragebogen, der direkt aufploppt, wenn man den Server zum ersten Mal betritt. Hier klickt man seine Fächer und Stufe an, damit der Server sich automatisch für einen einrichtet.
+*   **Pingen / Erwähnen (@):** Wenn man ein `@` vor einen Namen oder eine Rolle setzt (z. B. `@Schülerrat`), bekommen diese Personen eine direkte Benachrichtigung auf ihr Handy/PC. Bitte sparsam verwenden!
+
+---
+
+## ❓ 7. FAQ (Häufig gestellte Fragen)
+
+**Warum nutzen wir Discord und nicht einfach eine WhatsApp-Gruppe?**
+WhatsApp-Gruppen werden bei mehr als 20 Leuten extrem unübersichtlich. Dokumente gehen unter, neue Mitglieder können alte Nachrichten nicht lesen und man muss seine private Handynummer preisgeben. Discord schützt unsere Privatsphäre und durch die Foren-Struktur ist alles perfekt geordnet nach Fächern und Jahrgängen auffindbar.
+
+**Ist dieser Server offiziell vom AGY Dresden?**
+Nein. Dieser Server ist ein reines "Von Lernenden für Lernende"-Projekt. Er wird unabhängig von der Schulleitung betrieben. Deshalb gilt auch bei Infos (wie z. B. zu BAföG) immer: Keine Gewähr.
+
+**Muss ich meinen echten Namen angeben?**
+Auf keinen Fall. Datenschutz steht an erster Stelle. Es reicht völlig, wenn du deinen Vornamen oder einen Nicknamen nutzt. Hauptsache, wir gehen respektvoll miteinander um.
+
+**Können Lehrkräfte sehen, was ich hier hochlade oder schreibe?**
+Nein. Der Server ist ein Safespace für uns Lernende. Es haben nur Personen Zutritt, die den Einladungslink besitzen, und wir passen gemeinsam auf, dass der Server ein Ort unter uns bleibt.
+
+**Was passiert, wenn ich beim Onboarding aus Versehen die falschen Kurse angeklickt habe?**
+Gar kein Problem! Du kannst deine Antworten jederzeit ändern. Klicke dazu am PC oder am Handy einfach oben links auf den Servernamen ("AGY Discord") und wähle im Menü "Kanäle & Rollen" (oder "Linked Roles"). Dort kannst du deine Fächer neu zusammenstellen.
+
+**Darf ich meine benotete Klassenarbeit abfotografieren und teilen?**
+Nein, offizielle, vom Lehrer gestempelte und korrigierte Klausuren unterliegen dem Urheberrecht. Was du aber immer machen darfst: Die Aufgaben aus dem Kopf in ein Textdokument abtippen (Gedächtnisprotokoll) oder deine eigenen, selbst geschriebenen Lernzettel und Hausaufgaben teilen!
+
+**Ich verstehe die Foren immer noch nicht – was jetzt?**
+Keine Panik! Komm einfach in den `#allgemein` Chat und frag nach Hilfe. Es ist immer jemand da, der dir kurz erklärt, wie du etwas hochladen oder finden kannst. Wir helfen uns gegenseitig!
