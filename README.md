@@ -86,27 +86,27 @@ Bevor Lernende den Server betreten können, müssen sie in einem Pop-up diesen R
 
 > # :wave: Willkommen auf dem inoffiziellen AGY Discord!
 > Von Lernenden für Lernende. Unser Ziel: Gemeinsam durchs Abi! Tauscht euch aus, klärt Fragen und sammelt Lernzettel zentral an einem Ort.
-
-## :compass: Server-Wegweiser
-* **#allgemein:** Für Austausch, Smalltalk & Fragen. Bei Anliegen direkt den `@Schülerrat` markieren.
-* **#bafög-und-soziales:** Tipps zur Finanzierung (von Lernenden gesammelt, ohne Gewähr).
-* **:books: Lernbereich:** Jedes Fach hat ein eigenes **Forum** (Achtung: kein Text-Chat!).
-
-## :bulb: Wie funktionieren die Lern-Foren?
-Foren sind wie ein digitales schwarzes Brett für eure Dokumente.
-* **Material finden:** Klicke im Fachforum auf das Tag-Symbol (z. B. `[E-Phase]`), um direkt Inhalte für deine Stufe zu sehen.
-* **Hochladen:** Klicke auf "Neuer Beitrag" und wähle einen klaren Titel. Pro Thema ein Beitrag, sammelt Inhalte zu gleichen Themen gern in bereits bestehenden Foren-Posts.
-* **:label: Tags sind Pflicht:** Wähle vor dem Posten zwingend Etiketten aus (z. B. `[Jg 12]`). Ohne Tags entsteht Chaos!
-* **Fragen stellen:** Schreibe Fragen zu Lernzetteln direkt als Antwort in den jeweiligen Beitrag.
-
-## :busts_in_silhouette: Eure Ansprechpersonen
-* **@Admin & @Moderator :** Hilfe bei technischen Problemen oder Regelverstößen.
-* **@Schülerrat:** Eure offizielle Vertretung bei schulischen Anliegen.
-
-## :link: Wichtige Links
-* [Website AGY Dresden](https://agy-dresden.de/)
-* [LernSax (Schul-Cloud)](https://www.lernsax.de)
-*(Den Vertretungsplan findet ihr in der VPMobil App).*
+> 
+> ## :compass: Server-Wegweiser
+> * **#allgemein:** Für Austausch, Smalltalk & Fragen. Bei Anliegen direkt den `@Schülerrat` markieren.
+> * **#bafög-und-soziales:** Tipps zur Finanzierung (von Lernenden gesammelt, ohne Gewähr).
+> * **:books: Lernbereich:** Jedes Fach hat ein eigenes **Forum** (Achtung: kein Text-Chat!).
+>
+> ## :bulb: Wie funktionieren die Lern-Foren?
+> Foren sind wie ein digitales schwarzes Brett für eure Dokumente.
+> * **Material finden:** Klicke im Fachforum auf das Tag-Symbol (z. B. `[E-Phase]`), um direkt Inhalte für deine Stufe zu sehen.
+> * **Hochladen:** Klicke auf "Neuer Beitrag" und wähle einen klaren Titel. Pro Thema ein Beitrag, sammelt Inhalte zu gleichen Themen gern in bereits bestehenden Foren-Posts.
+> * **:label: Tags sind Pflicht:** Wähle vor dem Posten zwingend Etiketten aus (z. B. `[Jg 12]`). Ohne Tags entsteht Chaos!
+> * **Fragen stellen:** Schreibe Fragen zu Lernzetteln direkt als Antwort in den jeweiligen Beitrag.
+>
+> ## :busts_in_silhouette: Eure Ansprechpersonen
+> * **@Admin & @Moderator :** Hilfe bei technischen Problemen oder Regelverstößen.
+> * **@Schülerrat:** Eure offizielle Vertretung bei schulischen Anliegen.
+>
+> ## :link: Wichtige Links
+> * [Website AGY Dresden](https://agy-dresden.de/)
+> * [LernSax (Schul-Cloud)](https://www.lernsax.de)
+> *(Den Vertretungsplan findet ihr in der VPMobil App).*
 
 ## 📖 6. Begriffserklärung (Glossar)
 
