@@ -15,7 +15,7 @@ Wir setzen auf ein System der **reaktiven Moderation**. Es gibt keine manuellen 
 | Rollenname | Farbe/Status | Rechte & Funktion |
 | :--- | :--- | :--- |
 | **@Admin** | Rot (Sichtbar) | Volle Serverkontrolle, Technik, Rechtemanagement. |
-| **@Moderation** | Orange (Sichtbar) | Nachrichten löschen, User verwarnen/kicken, Chat-Pflege. |
+| **@Moderator** | Orange (Sichtbar) | Nachrichten löschen, User verwarnen/kicken, Chat-Pflege. |
 | **@Schülerrat** | Blau (Sichtbar) | Offizielle Ansprechpersonen der Schülerschaft. |
 | **@Jahrgang 12 / 11 / E-Phase** | Farblich getrennt | Dienen der Gruppierung in der rechten Mitgliederliste. |
 | **@LK / @GK / @Klasse** | Unsichtbar im Menü | Dienen als Profil-Tags zur leichteren Erkennung im Chat. |
