@@ -84,39 +84,29 @@ Bevor Lernende den Server betreten können, müssen sie in einem Pop-up diesen R
 
 *Dieser Text wird als feste, angepinnte Nachricht im Info-Kanal platziert:*
 
-> **Willkommen auf dem inoffiziellen AGY Discord! 👋**  
-> Dieser Server ist von Lernenden für Lernende, um sich auszutauschen und Lernzettel zentral zu sammeln. 
-> 
-> ---
-> 
-> **🧭 Wegweiser:**
-> * **#allgemein:** Hier könnt ihr euch jahrgangsübergreifend unterhalten, Smalltalk führen und schnelle Fragen stellen. Anliegen an den Schülerrat könnt ihr hier direkt posten (einfach `@Schülerrat` markieren).
-> * **#bafög-und-soziales:** Hilfreiche Tipps zur Finanzierung und Unterstützung.
-> * **📚 Der Lernbereich:** Hier gibt es für jedes Schulfach einen eigenen Kanal. Das sind allerdings keine normalen Text-Chats, sondern **Foren**.
-> 
-> ---
-> 
-> **💡 Wie funktionieren die Lern-Foren? (Bitte unbedingt lesen!)**  
-> Foren sind wie ein digitales schwarzes Brett. Sie verhindern, dass wichtige Dateien in einem langen Chat-Verlauf untergehen.
-> 
-> * **Material finden (Filtern):** Ihr sucht Mathe-Lernzettel für die E-Phase? Geht in das Forum `#mathematik` und klickt oben auf das kleine Such- oder Tag-Symbol. Wählt den Tag `[E-Phase]` aus. Schwupps – der Server zeigt euch *nur* noch relevante Beiträge für eure Stufe an.
-> * **Neues Material hochladen:** Klickt auf "Neuer Beitrag". Gebt eurem Post einen klaren, aussagekräftigen Titel (z. B. *"Zusammenfassung Zellbiologie Bio LK"*). 
-> * **🏷️ Tags (Etiketten) sind Pflicht:** Bevor ihr den Beitrag absenden könnt, **müsst** ihr passende Tags auswählen. Wählt aus, für wen das Material ist (z. B. `[Jg 12]`, `[LK]`) und was es ist (z. B. `[Zusammenfassung]`, `[Klausur-Tipps]`). Ohne Tags entsteht Chaos!
-> * **Fragen zum Material:** Wenn ihr eine Frage zu einer bestimmten Zusammenfassung habt, klickt auf den Beitrag und schreibt eure Frage dort hinein. So entsteht ein eigener, kleiner Chat nur für dieses eine Thema, ohne andere zu stören.
-> 
-> ---
-> 
-> **👥 Das Team:**
-> * **@Admin / @Moderation:** Eure Ansprechpersonen bei technischen Problemen, Fehlern oder Regelverstößen.
-> * **@Schülerrat:** Eure offizielle Vertretung bei schulischen und organisatorischen Anliegen.
-> 
-> ---
-> 
-> **🔗 Wichtige Links für den Schulalltag:**
-> * [Website AGY Dresden](https://Beispiel-Link.de)
-> * [LernSax / Schul-Cloud](https://Beispiel-Link.de)
-> * [Vertretungsplan](https://Beispiel-Link.de)
-> * [Offizielles BAföG-Portal](https://Beispiel-Link.de)
+> # :wave: Willkommen auf dem inoffiziellen AGY Discord!
+> Von Lernenden für Lernende. Unser Ziel: Gemeinsam durchs Abi! Tauscht euch aus, klärt Fragen und sammelt Lernzettel zentral an einem Ort.
+
+## :compass: Server-Wegweiser
+* **#allgemein:** Für Austausch, Smalltalk & Fragen. Bei Anliegen direkt den `@Schülerrat` markieren.
+* **#bafög-und-soziales:** Tipps zur Finanzierung (von Lernenden gesammelt, ohne Gewähr).
+* **:books: Lernbereich:** Jedes Fach hat ein eigenes **Forum** (Achtung: kein Text-Chat!).
+
+## :bulb: Wie funktionieren die Lern-Foren?
+Foren sind wie ein digitales schwarzes Brett für eure Dokumente.
+* **Material finden:** Klicke im Fachforum auf das Tag-Symbol (z. B. `[E-Phase]`), um direkt Inhalte für deine Stufe zu sehen.
+* **Hochladen:** Klicke auf "Neuer Beitrag" und wähle einen klaren Titel. Pro Thema ein Beitrag, sammelt Inhalte zu gleichen Themen gern in bereits bestehenden Foren-Posts.
+* **:label: Tags sind Pflicht:** Wähle vor dem Posten zwingend Etiketten aus (z. B. `[Jg 12]`). Ohne Tags entsteht Chaos!
+* **Fragen stellen:** Schreibe Fragen zu Lernzetteln direkt als Antwort in den jeweiligen Beitrag.
+
+## :busts_in_silhouette: Eure Ansprechpersonen
+* **@Admin & @Moderator :** Hilfe bei technischen Problemen oder Regelverstößen.
+* **@Schülerrat:** Eure offizielle Vertretung bei schulischen Anliegen.
+
+## :link: Wichtige Links
+* [Website AGY Dresden](https://agy-dresden.de/)
+* [LernSax (Schul-Cloud)](https://www.lernsax.de)
+*(Den Vertretungsplan findet ihr in der VPMobil App).*
 
 ## 📖 6. Begriffserklärung (Glossar)
 
