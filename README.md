@@ -40,9 +40,11 @@ Der Server wird in vier übersichtliche Kategorien unterteilt.
 - `#allgemein` – Der Hauptchat für den täglichen Austausch, Fragen, Smalltalk und schnelle Anliegen an den `@Schülerrat`.
 
 ### 📚 LERNBEREICH
-*(Foren-Kanäle)*
-- `#deutsch`, `#englisch`, `#mathematik`, `#physik`, `#chemie`, `#biologie`, `#französisch`, `#daz`, `#geschichte`, `#geographie`, `#ethik`
-> **Struktur-Hinweis:** In den Foren werden **Pflicht-Tags** eingerichtet (z. B. `[E-Phase]`, `[Jg 11]`, `[Jg 12]`, `[LK]`, `[GK]`, `[Zusammenfassung]`, `[Klausur-Tipps]`). 
+*(Foren-Kanäle — pro Fach UND Kurs getrennt)*
+- **E-Phase:** `#deutsch`, `#englisch`, `#mathematik`, `#physik`, `#chemie`, `#biologie`, `#französisch`, `#daz`, `#geschichte`, `#geographie`, `#ethik`
+- **Grundkurs (GK):** jeweils `#<fach>-gk` (z. B. `#deutsch-gk`, `#mathematik-gk`, `#grw-gk`)
+- **Leistungskurs (LK):** jeweils `#<fach>-lk` — nur in Deutsch, Englisch, Mathematik und Geschichte
+> **Struktur-Hinweis:** Der **Kurs** (E-Phase / GK / LK) steckt im jeweiligen Forum — man landet also automatisch im richtigen Bereich. Innerhalb der Foren sind **Pflicht-Tags** für die **Materialart** gesetzt: `Zusammenfassung`, `Klausur/Test`, `Hausaufgabe`, `Sonstiges`. Ein Beitrag = ein Thema.
 
 ### 🔒 INTERNER BEREICH
 *(Unsichtbar für normale Lernende)*
@@ -76,7 +78,7 @@ Bevor Lernende den Server betreten können, müssen sie in einem Pop-up diesen R
 - **§2 Respektvolles Miteinander:** Wir begegnen uns auf Augenhöhe. Diskriminierung, Rassismus, Sexismus, Mobbing oder toxisches Verhalten führen zum sofortigen Ausschluss.
 - **§3 Datenschutz:** Es besteht keine Klarnamen-Pflicht. Das Teilen von privaten Daten (Adressen, Nummern, private Profile) von Mitlernenden oder Lehrkräften ist strengstens verboten.
 - **§4 Urheberrecht:** Das Teilen von offiziellen, benoteten Klassenarbeiten (inkl. Korrekturen der Lehrkräfte) und geschützten Buchseiten ist untersagt. Erlaubt und erwünscht sind: Eigene Zusammenfassungen, Mitschriften, selbst erstellte Lernzettel und Gedächtnisprotokolle.
-- **§5 Struktur bewahren:** Bitte nutzt für Lerninhalte die entsprechenden Foren und markiert eure Beiträge mit den passenden Tags (z. B. E-Phase, Zusammenfassung), damit alle Lernenden schnell finden, was sie suchen.
+- **§5 Struktur bewahren:** Bitte nutzt für Lerninhalte das Forum eures Kurses (Fach + E-Phase/GK/LK) und markiert jeden Beitrag mit dem passenden Material-Tag (Zusammenfassung, Klausur/Test, Hausaufgabe, Sonstiges), damit alle Lernenden schnell finden, was sie suchen.
 
 ---
 
@@ -94,9 +96,9 @@ Bevor Lernende den Server betreten können, müssen sie in einem Pop-up diesen R
 >
 > ## :bulb: Wie funktionieren die Lern-Foren?
 > Foren sind wie ein digitales schwarzes Brett für eure Dokumente.
-> * **Material finden:** Klicke im Fachforum auf das Tag-Symbol (z. B. `[E-Phase]`), um direkt Inhalte für deine Stufe zu sehen.
-> * **Hochladen:** Klicke auf "Neuer Beitrag" und wähle einen klaren Titel. Pro Thema ein Beitrag, sammelt Inhalte zu gleichen Themen gern in bereits bestehenden Foren-Posts.
-> * **:label: Tags sind Pflicht:** Wähle vor dem Posten zwingend Etiketten aus (z. B. `[Jg 12]`). Ohne Tags entsteht Chaos!
+> * **Material finden:** Gehe in das Forum deines Kurses (z. B. `#mathematik-gk`) und filtere mit dem Tag-Symbol nach Materialart (z. B. `Zusammenfassung`).
+> * **Hochladen:** Klicke auf "Neuer Beitrag" und wähle einen klaren Titel, der genau sagt, worum es geht (z. B. "Kurvendiskussion – Grundlagen"). Pro Thema ein Beitrag; Ergänzungen zu einem bestehenden Thema lädst du als Antwort im gleichen Post hoch.
+> * **:label: Tags sind Pflicht:** Wähle vor dem Posten zwingend einen Material-Tag aus (`Zusammenfassung`, `Klausur/Test`, `Hausaufgabe`, `Sonstiges`). Ohne Tags entsteht Chaos!
 > * **Fragen stellen:** Schreibe Fragen zu Lernzetteln direkt als Antwort in den jeweiligen Beitrag.
 >
 > ## :busts_in_silhouette: Eure Ansprechpersonen
@@ -115,7 +117,7 @@ Für alle, die Discord bisher nicht genutzt haben oder sich mit den Begriffen no
 *   **Server:** Unser digitaler Treffpunkt. Man kann es sich wie das gesamte Schulgebäude des AGY im Internet vorstellen.
 *   **Kanal (Channel):** Ein einzelner Raum innerhalb unseres Servers. Es gibt **Textkanäle** (wie ein virtuelles Klassenzimmer, in dem alle chatten) und **Foren**.
 *   **Forum:** Ein spezieller Kanal, der nicht für wilde Chats gedacht ist, sondern wie ein digitales, gut sortiertes schwarzes Brett funktioniert. Perfekt, um Lernzettel und Zusammenfassungen hochzuladen, ohne dass sie im Chat-Verlauf verschwinden.
-*   **Tag (Etikett):** Ein Schlagwort, das man an seinen Foren-Beitrag heften muss (z. B. `[E-Phase]` oder `[Klausur]`). Dadurch können andere Lernende das Forum filtern und finden sofort, was sie suchen.
+*   **Tag (Etikett):** Ein Schlagwort, das man an seinen Foren-Beitrag heften muss (`Zusammenfassung`, `Klausur/Test`, `Hausaufgabe` oder `Sonstiges`). Dadurch können andere Lernende das Forum nach Materialart filtern und finden sofort, was sie suchen.
 *   **Rolle:** Ein virtuelles Namensschild oder eine Mitgliedschaft (z. B. `@E-Phase` oder `@Lernende`). Rollen legen fest, welche Farbe dein Name hat, welche Kanäle du sehen kannst und welche Rechte du besitzt.
 *   **Onboarding:** Der Fragebogen, der direkt aufploppt, wenn man den Server zum ersten Mal betritt. Hier klickt man seine Fächer und Stufe an, damit der Server sich automatisch für einen einrichtet.
 *   **Pingen / Erwähnen (@):** Wenn man ein `@` vor einen Namen oder eine Rolle setzt (z. B. `@Schülerrat`), bekommen diese Personen eine direkte Benachrichtigung auf ihr Handy/PC. Bitte sparsam verwenden!
