@@ -1,0 +1,9 @@
+datei;fach;kurs;thema;art;titel;ziel_kanal;tags;status;notiz
+BEISPIEL_Mathematik_GK_Grenzwerte_Zusammenfassung.pdf;Mathematik;GK;Grenzwerte Einführung;Zusammenfassung;Grenzwerte – Einführung und Regeln;mathematik-gk;Zusammenfassung;offen;
+BEISPIEL_Deutsch_LK_Epochenvergleich_Zusammenfassung.pdf;Deutsch;LK;Vergleich der Epochen;Zusammenfassung;Vergleich der Epochen: Aufklärung – Sturm und Drang;deutsch-lk;Zusammenfassung;offen;zweite Fassung
+
+# Hinweise
+# - Zeilen, deren datei mit BEISPIEL_ beginnt, werden ignoriert.
+# - ziel_kanal = Forum-Name (ohne #), Auflösung über foren-map.resolved.csv
+# - art bestimmt den Tag: Zusammenfassung | Klausur/Test | Hausaufgabe | Sonstiges
+# - datei verweist auf sortiert/<datei>

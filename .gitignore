@@ -1,0 +1,22 @@
+# Keine Zugangsdaten, keine Server-Daten im Repo.
+# Tokens liegen außerhalb: ~/.config/agy-discord/tokens.env (chmod 600)
+
+*.env
+tokens.env
+__pycache__/
+*.pyc
+.cache/
+
+# Arbeitsdaten (Material, Indizes, Manifeste) bleiben lokal
+eingang/
+sortiert/
+_pruefen/
+_index_alt.csv
+foren-map*.csv
+manifest*.csv
+problematisch*.csv
+_text_*.json
+_klass_*.json
+
+# Ausnahme: Format-Beispiel ohne echte Daten
+!skripte/manifest.beispiel.csv

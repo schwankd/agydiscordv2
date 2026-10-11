@@ -151,3 +151,26 @@ Keine Panik! Komm einfach in den `#allgemein` Chat und frag nach Hilfe. Es ist i
 > **🤖 Hinweis zur Entstehung:** 
 > Die Struktur, Ausformulierung und Formatierung dieses Konzepts wurden zur besseren Übersichtlichkeit mit Unterstützung von Künstlicher Intelligenz (KI) ausgearbeitet. Die grundlegenden Ideen, Anforderungen und Entscheidungen stammen jedoch zu 100 % von den Lernenden und wurden manuell geprüft.
 ---
+
+## 🧰 Technik & Transparenz
+
+Der Server wird seit Oktober 2026 zusätzlich aus zwei alten, inzwischen inaktiven
+Lern-Servern mit Material befüllt. Der Code dafür liegt in [`skripte/`](skripte/):
+
+- **Zwei Discord-Bots** — ein *Archivar* (nur Lese-Rechte, holt Anhänge read-only aus den
+  Alt-Servern) und ein *Poster* (legt im neuen Server Forum-Beiträge mit Material-Tag und
+  Datei an). Aufrufe laufen ausschließlich über die REST-API, ohne Gateway.
+- **Eine lokale Material-Pipeline** — Text/OCR, Themenbündelung, PDF-Kompression und
+  Prüfliste. Details in [`skripte/README-Skripte.md`](skripte/README-Skripte.md), der
+  Projektablauf in [`README-Material-Pipeline.md`](README-Material-Pipeline.md).
+
+Was **nicht** im Repository liegt:
+
+- **Keine Tokens** — Bot-Zugangsdaten liegen außerhalb des Repos (`~/.config/agy-discord/tokens.env`, `chmod 600`).
+- **Keine Server- oder Kanal-IDs** — die werden zur Laufzeit über `discover.py` gelesen und nie committet.
+- **Kein Material und keine Metadaten** — keine Dateien der Lernenden, keine Dateilisten,
+  keine Manifeste. Siehe [`.gitignore`](.gitignore).
+
+Die Bots unterliegen `§4 Urheberrecht` wie jeder andere Beitrag: Der Materialbestand aus
+den Alt-Servern stammt aus einem alten Lern-Server und wurde beim Einpflegen markiert
+(Klausurfotos, Lehrpläne, Verlagsseiten) und in einer Prüfliste zusammengefasst.
