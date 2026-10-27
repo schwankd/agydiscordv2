@@ -36,6 +36,9 @@ K = 5                    # Stimmen aus den k ähnlichsten Dokumenten
 CLEAR = 0.60             # ab diesem Stimmenanteil gilt ein Ziel als klar
 MARGIN = 0.15            # Abstand nötig, damit „klar" gilt statt „unklar"
 ZWEIT = 0.20             # ab diesem Anteil kommt eine Stufe als zweites Ziel mit
+MIN_SIM = 0.12           # UNTERGRENZE: darunter ist der Treffer Rauschen, kein Beleg.
+# Ohne diese Grenze rechnet der Stimmenanteil Rauschen zu einem „klaren" Urteil hoch —
+# gemessen traten Fälle mit 0,05 Ähnlichkeit als „klar: mathematik-gk (79%)" auf.
 
 
 def tokens(text: str) -> set[str]:
@@ -79,11 +82,17 @@ def referenz() -> list[dict]:
 
 
 def aehnliche(tok: set[str], ref: list[dict], k: int = K,
-              ohne_thash: str | None = None) -> list[tuple[float, dict]]:
-    """Die k ähnlichsten Referenzdokumente. Gleicher Inhalt wird ausgeschlossen."""
+              ohne_thash: str | set | None = None) -> list[tuple[float, dict]]:
+    """Die k ähnlichsten Referenzdokumente. Ausgeschlossener Inhalt zählt nicht.
+
+    `ohne_thash` nimmt einen Hash oder eine Menge von Hashes — beim Prüfen eines
+    geposteten Beitrags müssen ALLE seine Quelldateien raus, sonst bestätigt er
+    sich selbst.
+    """
+    ohne = {ohne_thash} if isinstance(ohne_thash, str) else set(ohne_thash or ())
     aus = []
     for r in ref:
-        if ohne_thash and r["thash"] == ohne_thash:
+        if r["thash"] in ohne:
             continue
         inter = len(tok.intersection(r["tokens"]))
         if inter < 3:
@@ -116,6 +125,9 @@ def ziele_of(treffer: list[tuple[float, dict]]) -> tuple[list[str], str]:
     rang = rangliste(treffer)
     if not rang:
         return [], "keine vergleichbaren Dokumente"
+    if treffer[0][0] < MIN_SIM:
+        # Kein Beleg: die ähnlichsten Dokumente haben mit dem Inhalt nichts zu tun.
+        return [], f"kein Beleg (ähnlichster Treffer nur {treffer[0][0]:.2f}) — ansehen"
     klar = rang[0][1] >= CLEAR and (len(rang) == 1 or rang[0][1] - rang[1][1] >= MARGIN)
     beleg = ", ".join(f"{z} {a:.0%}" for z, a in rang[:3])
     if klar:
@@ -148,7 +160,7 @@ def pruefen(zeigen: int = 0) -> int:
         ziele, grund = ziele_of(treffer)
         if any(x["thash"] == r["thash"] and x["ziel"] != r["ziel"] for x in ref):
             doppelt += 1
-        if not treffer:
+        if not ziele:                      # kein Beleg -> nicht beurteilbar, nicht falsch
             leer += 1
             continue
         ziele_summe += len(ziele)
@@ -164,17 +176,21 @@ def pruefen(zeigen: int = 0) -> int:
             fehler.append((r, ziele, grund))
 
     n = len(ref)
+    b = max(1, n - leer)
     print(f"\n=== Leave-one-out über {n} Dokumente ===")
-    print(f"  richtig Forum dabei (KEIN Verlust): {abgedeckt}/{n}  ({abgedeckt / n:.0%})")
-    print(f"  Stufe exakt richtig               : {exakt}/{n}  ({exakt / n:.0%})")
-    print(f"  Fach richtig (Vorschlag 1)        : {fach_ok}/{n}  ({fach_ok / n:.0%})")
-    print(f"  Ziele je Dokument                 : {ziele_summe / max(1, n - leer):.2f}")
-    print(f"  ohne Treffer                      : {leer}")
+    print(f"  beurteilbar (echter Beleg)        : {n - leer}/{n}")
+    print(f"  richtig Forum dabei (KEIN Verlust): {abgedeckt}/{b}  ({abgedeckt / b:.0%})")
+    print(f"  Stufe exakt richtig               : {exakt}/{b}  ({exakt / b:.0%})")
+    print(f"  Fach richtig (Vorschlag 1)        : {fach_ok}/{b}  ({fach_ok / b:.0%})")
+    print(f"  Ziele je Dokument                 : {ziele_summe / b:.2f}")
+    print(f"  kein Beleg (nicht beurteilbar)    : {leer}")
     print(f"  Inhalt lag im Archiv auch in anderer Stufe (echt mehrdeutig): {doppelt}")
 
     nach_kurs = collections.defaultdict(lambda: [0, 0])
     for r in ref:
         ziele, _ = ziele_of(aehnliche(r["tokens"], ref, ohne_thash=r["thash"]))
+        if not ziele:                      # nicht beurteilbar -> nicht mitzählen
+            continue
         nach_kurs[r["kurs"]][1] += 1
         nach_kurs[r["kurs"]][0] += (r["ziel"] in ziele)
     print("\n  kein Verlust, nach Stufe des Dokuments:")
@@ -226,7 +242,7 @@ def pruefen(zeigen: int = 0) -> int:
             if not (unten <= len(r["tokens"]) < oben):
                 continue
             ziele, _ = ziele_of(aehnliche(r["tokens"], ref, ohne_thash=r["thash"]))
-            if not ziele:
+            if not ziele:                  # nicht beurteilbar -> nicht mitzählen
                 continue
             tot += 1
             ok += r["ziel"] in ziele
@@ -303,16 +319,75 @@ def offen() -> int:
     return 0
 
 
+def gepostet(zeigen: int = 25) -> int:
+    """Gegenprobe: jeden bereits geposteten Beitrag gegen das Archiv prüfen.
+
+    Die eigenen Quelldateien werden aus der Referenz ausgeschlossen, sonst würde
+    sich der Beitrag selbst bestätigen. Gefragt wird also: „Wohin gehört dieser
+    Inhalt, wenn man nur ANDERES Archivmaterial ansieht?" — eine unabhängige
+    Bestätigung oder ein Widerspruch.
+    """
+    import deepcheck                                     # lokal: kein Importzyklus
+    ref = referenz()
+    gesamt = ok = streit = offen = 0
+    fach_falsch, nur_stufe = [], []
+    for m in deepcheck.subjects():
+        files, klass = deepcheck.clusters(m)
+        for c in klass:
+            fs = [files[i] for i in c["ids"] if 0 <= i < len(files)]
+            if not fs:
+                continue
+            gesamt += 1
+            tok, eigen = set(), set()
+            for f in fs:
+                tok |= tokens(f["text"])
+                eigen.add(thash(f["text"]))
+            gepostete = c.get("ziele") or [c["ziel"]]
+            if len(tok) < MIN_TOKENS:
+                offen += 1
+                continue
+            vorschlag, grund = ziele_of(aehnliche(tok, ref, ohne_thash=eigen))
+            if not vorschlag:
+                offen += 1
+                continue
+            if vorschlag[0].split("-")[0] != gepostete[0].split("-")[0]:
+                fach_falsch.append((c["titel"], gepostete, vorschlag, grund, fs[0]["datei"]))
+            elif set(gepostete).intersection(vorschlag):
+                ok += 1
+            else:
+                streit += 1
+                nur_stufe.append((c["titel"], gepostete, vorschlag, grund, fs[0]["datei"]))
+
+    print(f"=== Gegenprobe: {gesamt} gepostete Beiträge gegen das Archiv ===")
+    print(f"  bestätigt (Fach und Stufe)          : {ok}  ({ok / gesamt:.0%})")
+    print(f"  Fach bestätigt, Stufe weicht ab     : {streit}  (hätte ggf. doppelt gehört)")
+    print(f"  FACH WEICHT AB (ansehen!)           : {len(fach_falsch)}")
+    print(f"  nicht beurteilbar (Text zu dünn)    : {offen}")
+    if fach_falsch:
+        print(f"\n  Fach-Abweichungen:")
+        for titel, p, v, grund, datei in fach_falsch[:zeigen]:
+            print(f"    gepostet {','.join(p):<22} Inhalt sagt {','.join(v):<22} {titel[:38]}")
+            print(f"       {datei[:60]}  |  {grund[:60]}")
+    if nur_stufe:
+        print(f"\n  Stufen-Abweichungen (erste {min(zeigen, len(nur_stufe))}):")
+        for titel, p, v, grund, datei in nur_stufe[:zeigen]:
+            print(f"    gepostet {','.join(p):<22} Inhalt sagt {','.join(v):<22} {titel[:38]}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pruefen", action="store_true", help="Selbsttest mit Trefferquoten")
     ap.add_argument("--offen", action="store_true", help="neu abgelegtes Material zuordnen")
-    ap.add_argument("--zeigen", type=int, default=0, help="Abweichungen anzeigen")
+    ap.add_argument("--gepostet", action="store_true", help="gepostete Beiträge gegen das Archiv prüfen")
+    ap.add_argument("--zeigen", type=int, default=25, help="Abweichungen anzeigen")
     args = ap.parse_args()
     if args.pruefen:
         return pruefen(args.zeigen)
     if args.offen:
         return offen()
+    if args.gepostet:
+        return gepostet(args.zeigen)
     print(__doc__)
     return 0
 
