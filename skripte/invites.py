@@ -113,8 +113,7 @@ def expires_epoch(m: dict) -> float | None:
             return None
 
 
-def live_status(client: Client, row: dict) -> tuple[int, bool, str]:
-    m = invite_meta(client, row["code"])
+def status_from_meta(m: dict, row: dict) -> tuple[int, bool, str]:
     if not m:
         return row.get("uses", 0) or 0, True, "gelöscht/ungültig"
     uses = m.get("uses", 0)
@@ -126,6 +125,10 @@ def live_status(client: Client, row: dict) -> tuple[int, bool, str]:
     else:
         state = "offen"
     return uses, exp is None, state
+
+
+def live_status(client: Client, row: dict) -> tuple[int, bool, str]:
+    return status_from_meta(invite_meta(client, row["code"]), row)
 
 
 # --- Kommandos ------------------------------------------------------------
@@ -274,7 +277,7 @@ def cmd_export(args) -> int:
             link = f"https://discord.gg/{r['code']}"
             ts = expires_epoch(m)
             exp = dt.datetime.fromtimestamp(ts).strftime("%d.%m.%Y") if ts else "nie"
-            w.writerow([n, r.get("label", ""), link, exp, live_status(client, r)[2],
+            w.writerow([n, r.get("label", ""), link, exp, status_from_meta(m, r)[2],
                         MAIL_BETREFF, mail_text(link), ""])
     out.chmod(0o600)
     print(f"{len(rows)} Links → {out}")

@@ -95,6 +95,38 @@ def kopfband(zeilen: list[tuple[float, float, float, float, str]]) -> tuple[floa
     return min(unten, BAND_MAX), felder[:6]
 
 
+def kopfblaetter(quelle: pathlib.Path, ordner: pathlib.Path, hoehe: float = 0.25,
+                 spalten: int = 3, kachel: int = 1100) -> int:
+    """Je Datei EIN lesbares Blatt mit den Kopfstreifen aller Seiten (Original).
+
+    Miniaturansichten ganzer Seiten sind zu klein für Handschrift. Namen stehen
+    im Kopfbereich — deshalb nur die oberen 25 % der Seite, dafür groß. Damit kann
+    ein Mensch die Namen finden, die eine Maschine nicht verlässlich erkennt.
+    """
+    ordner.mkdir(parents=True, exist_ok=True)
+    doc = fitz.open(quelle)
+    ks = []
+    for i, page in enumerate(doc):
+        px = page.get_pixmap(dpi=110, clip=fitz.Rect(0, 0, page.rect.width,
+                                                    page.rect.height * hoehe))
+        img = Image.frombytes("RGB", (px.width, px.height), px.samples)
+        img.thumbnail((kachel, 340), Image.LANCZOS)
+        k = Image.new("RGB", (kachel, 340 + 24), "white")
+        k.paste(img, (0, 0))
+        ImageDraw.Draw(k).text((8, 346), f"{quelle.name[:46]}  —  Seite {i + 1}",
+                               fill="black")
+        ks.append(k)
+    doc.close()
+    z = (len(ks) + spalten - 1) // spalten
+    blatt = Image.new("RGB", (spalten * kachel, z * 364), "white")
+    for i, k in enumerate(ks):
+        blatt.paste(k, ((i % spalten) * kachel, (i // spalten) * 364))
+    aus = ordner / f"{quelle.stem[:60]}.png"
+    blatt.save(aus)
+    print(f"  {quelle.name[:50]:<50} {len(ks)} Seiten -> {aus.name}")
+    return 0
+
+
 def boegen(teile_vor: list, teile_nach: list, ziel: pathlib.Path, kachel: int = 420) -> None:
     """Zwei Kontaktbögen (vorher/nachher) für die Sichtprüfung."""
     spalten = 4
@@ -124,6 +156,9 @@ def main() -> int:
     ap.add_argument("--machen", action="store_true", help="geschwärzte Fassung schreiben")
     ap.add_argument("--bogen", default=None, help="Kontaktbogen vorher/nachher hierhin")
     ap.add_argument("--max-seiten", type=int, default=0, help="nur die ersten N Seiten")
+    ap.add_argument("--qualitaet", type=int, default=72, help="JPEG-Qualität (kleiner = kleinere Datei)")
+    ap.add_argument("--kopfblaetter", default=None,
+                    help="Ordner: je Datei ein lesbares Kopfstreifen-Blatt (Original) ablegen")
     args = ap.parse_args()
 
     quelle = pathlib.Path(args.datei)
@@ -134,6 +169,9 @@ def main() -> int:
     if not quelle.exists():
         print(f"!! nicht gefunden: {quelle}")
         return 1
+
+    if args.kopfblaetter:
+        return kopfblaetter(quelle, pathlib.Path(args.kopfblaetter))
 
     binary = ocr_binary()
     doc = fitz.open(quelle)
@@ -168,7 +206,7 @@ def main() -> int:
 
         if args.machen:
             zt = CACHE / f"_anom{i}.jpg"
-            bild.save(zt, "JPEG", quality=72)
+            bild.save(zt, "JPEG", quality=args.qualitaet)
             seite = neu.new_page(width=bild.width, height=bild.height)
             seite.insert_image(fitz.Rect(0, 0, bild.width, bild.height), filename=str(zt))
             zt.unlink(missing_ok=True)
