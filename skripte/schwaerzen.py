@@ -252,12 +252,17 @@ def gedeckt(zeilen: list[tuple[float, float, float, float, str]],
 
 
 def kopfblaetter(quelle: pathlib.Path, ordner: pathlib.Path, hoehe: float = 0.25,
-                 spalten: int = 3, kachel: int = 1100) -> int:
+                 spalten: int = 3, kachel: int = 1100, name: str | None = None) -> int:
     """Je Datei EIN lesbares Blatt mit den Kopfstreifen aller Seiten (Original).
 
     Miniaturansichten ganzer Seiten sind zu klein für Handschrift. Namen stehen
     im Kopfbereich — deshalb nur die oberen 25 % der Seite, dafür groß. Damit kann
     ein Mensch die Namen finden, die eine Maschine nicht verlässlich erkennt.
+
+    ``name`` überschreibt den Ausgabedateinamen. Nötig, weil der abgeleitete Name
+    auf 60 Zeichen gekürzt wird: bei Original und geschwärzter Fassung entstehen
+    sonst Namen, die sich nur hinter der Kürzung unterscheiden — und ein Vergleich,
+    der die Blätter über Namen paart, greift dann daneben.
     """
     ordner.mkdir(parents=True, exist_ok=True)
     doc = fitz.open(quelle)
@@ -277,7 +282,7 @@ def kopfblaetter(quelle: pathlib.Path, ordner: pathlib.Path, hoehe: float = 0.25
     blatt = Image.new("RGB", (spalten * kachel, z * 364), "white")
     for i, k in enumerate(ks):
         blatt.paste(k, ((i % spalten) * kachel, (i // spalten) * 364))
-    aus = ordner / f"{quelle.stem[:60]}.png"
+    aus = ordner / (name or f"{quelle.stem[:60]}.png")
     blatt.save(aus)
     print(f"  {quelle.name[:50]:<50} {len(ks)} Seiten -> {aus.name}")
     return 0
@@ -315,6 +320,9 @@ def main() -> int:
     ap.add_argument("--qualitaet", type=int, default=72, help="JPEG-Qualität (kleiner = kleinere Datei)")
     ap.add_argument("--kopfblaetter", default=None,
                     help="Ordner: je Datei ein lesbares Kopfstreifen-Blatt (Original) ablegen")
+    ap.add_argument("--nur-rastern", action="store_true",
+                    help="nur Seiten einbrennen (kein OCR, keine Schwärzung) — für manuell "
+                         "markierte PDFs: danach ist die Schwärzung echt und der Textlayer weg")
     args = ap.parse_args()
 
     quelle = pathlib.Path(args.datei)
@@ -333,6 +341,32 @@ def main() -> int:
     doc = fitz.open(quelle)
     gesamt = doc.page_count
     n_seiten = min(args.max_seiten, gesamt) if args.max_seiten else gesamt
+
+    if args.nur_rastern:
+        # Für die manuelle Schwärzung: Domenic markiert die Stellen selbst (egal
+        # womit), dieses Werkzeug brennt sie ein. Jede Seite wird als BILD neu
+        # aufgebaut — nur so ist die Schwärzung echt. Ein schwarzes Rechteck über
+        # einem Textlayer lässt den Namen weiterhin herausziehen (im PDF lesbar),
+        # und eine Anmerkung aus dem PDF-Betrachter kann jeder wieder löschen.
+        neu = fitz.open()
+        for i in range(n_seiten):
+            pix = doc[i].get_pixmap(dpi=DPI, annots=True)
+            bild = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+            zt = CACHE / f"_br{i}.jpg"
+            bild.save(zt, "JPEG", quality=args.qualitaet)
+            seite = neu.new_page(width=bild.width, height=bild.height)
+            seite.insert_image(fitz.Rect(0, 0, bild.width, bild.height), filename=str(zt))
+            zt.unlink(missing_ok=True)
+        ziel = quelle.with_name(quelle.stem + "_gebrannt.pdf")
+        neu.save(ziel, deflate=True, garbage=4)
+        mit_text = sum(1 for s in neu if (s.get_text() or "").strip())
+        neu.close()
+        doc.close()
+        print(f"\n-> {ziel.name} ({ziel.stat().st_size / 1e6:.2f} MB), "
+              f"{n_seiten} Seiten eingebrannt")
+        print(f"   Textlayer auf {mit_text} Seiten — muss 0 sein.")
+        return 0 if mit_text == 0 else 1
+
     neu = fitz.open()
     vor_tiles, nach_tiles, geschwaerzt, ohne = [], [], 0, 0
     print(f"{quelle.name}: {gesamt} Seiten"
