@@ -196,24 +196,52 @@ def cmd_revoke(args) -> int:
     return 0
 
 
+MAIL_BETREFF = "Dein Zugang zum AGY-Discord"
+
+
+def mail_text(link: str) -> str:
+    return (
+        "Hallo,\n\n"
+        "hier ist dein persönlicher Zugang zum Discord-Server des AGY:\n"
+        f"{link}\n\n"
+        "Wichtig: Der Link funktioniert genau EINMAL und nur für dich. Bitte nicht "
+        "weitergeben — ist er benutzt, ist er tot. Er läuft nach ein paar Tagen ab.\n\n"
+        "Danach im Server die Regeln bestätigen und das Onboarding ausfüllen.\n"
+        "Viele Grüße"
+    )
+
+
 def cmd_export(args) -> int:
-    rows = [r for r in load_ledger() if not args.label or r.get("label") == args.label]
+    rows = load_ledger()
+    if args.label:
+        rows = [r for r in rows if r.get("label") == args.label]
     if not rows:
         print("Keine passenden Codes im Ledger.", file=sys.stderr)
         return 1
     client = Client(get_token(args.token))
+    if args.unused:                       # schon verbrauchte Codes nicht mehr verschicken
+        rows = [r for r in rows if live_status(client, r)[2] != "verbraucht"]
+        if not rows:
+            print("Alle Codes dieser Kohorte sind verbraucht.", file=sys.stderr)
+            return 1
     stamp = dt.date.today().isoformat()
     out = pathlib.Path(args.out or (LEDGER.parent / f"einladungen-{args.label or 'alle'}-{stamp}.csv"))
-    with out.open("w", newline="", encoding="utf-8") as fh:
+    with out.open("w", newline="", encoding="utf-8-sig") as fh:   # BOM -> Excel/LibreOffice
         w = csv.writer(fh, delimiter=";")
-        w.writerow(["Nr", "Kohorte", "Link", "gueltig_bis", "Status"])
+        w.writerow(["Nr", "Kohorte", "Link", "gueltig_bis", "Status",
+                    "Betreff", "Nachricht", "Empfaenger"])
         for n, r in enumerate(rows, 1):
-            uses, never, state = live_status(client, r)
             m = invite_meta(client, r["code"])
-            exp = dt.datetime.fromtimestamp(m["expires_at"]).strftime("%d.%m.%Y %H:%M") if m.get("expires_at") else "nie"
-            w.writerow([n, r.get("label", ""), f"https://discord.gg/{r['code']}", exp, state])
+            link = f"https://discord.gg/{r['code']}"
+            exp = (dt.datetime.fromtimestamp(m["expires_at"]).strftime("%d.%m.%Y")
+                   if m.get("expires_at") else "nie")
+            w.writerow([n, r.get("label", ""), link, exp, live_status(client, r)[2],
+                        MAIL_BETREFF, mail_text(link), ""])
     out.chmod(0o600)
-    print(f"{len(rows)} Links → {out}\n(Drucken/verteilen — Datei enthält Zugangscodes, nicht committen.)")
+    print(f"{len(rows)} Links → {out}")
+    print("Spalte 'Empfaenger' von Hand füllen (LernSax), dann Serienmail.\n"
+          "ACHTUNG: gefüllt ist die Datei personenbezogen — nur lokal, nie in Vault/Repo/Cloud,\n"
+          "und nach dem Versand löschen.")
     return 0
 
 
@@ -221,6 +249,7 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description="AGY-Discord Einmal-Einladungen")
     ap.add_argument("--token", default="AGY_TOKEN_NEU")
     ap.add_argument("--guild", help="Server-ID oder -Name")
+    ap.add_argument("--ledger", help="anderes Ledger (Tests) — Default ~/.config/agy-discord/invites.json")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     g = sub.add_parser("gen", help="N Einmal-Codes erzeugen")
@@ -243,15 +272,19 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--unused", action="store_true", help="nur noch nicht genutzte")
     r.set_defaults(func=cmd_revoke)
 
-    e = sub.add_parser("export", help="als Liste ausgeben")
+    e = sub.add_parser("export", help="als CSV (Serienmail-fähig) ausgeben")
     e.add_argument("--label")
     e.add_argument("--out")
+    e.add_argument("--unused", action="store_true", help="verbrauchte Codes weglassen")
     e.set_defaults(func=cmd_export)
     return ap
 
 
 def main() -> int:
+    global LEDGER
     args = build_parser().parse_args()
+    if getattr(args, "ledger", None):      # Test-/Alternativ-Ledger
+        LEDGER = pathlib.Path(args.ledger).expanduser()
     try:
         return args.func(args)
     except DiscordError as err:

@@ -24,6 +24,7 @@ from deepcheck import clusters, subjects  # noqa: E402
 OUT = PROJECT / "_pruefen" / "bogen"
 SPALTEN = 6
 KACHEL = 300
+BLATT = 36          # Seiten je Kontaktbogen — mehr wird unlesbar
 
 
 def risiko() -> list[tuple[str, str, dict]]:
@@ -47,13 +48,20 @@ def risiko() -> list[tuple[str, str, dict]]:
     return aus
 
 
-def bogen(pfad: pathlib.Path, name: str, out: pathlib.Path) -> pathlib.Path:
+def bogen(pfad: pathlib.Path, name: str, out: pathlib.Path,
+          nur: tuple[int, int] | None = None) -> pathlib.Path:
+    """Kontaktbogen bauen. `nur=(von, bis)` beschränkt auf einen Seitenbereich.
+
+    Die Beschriftung zeigt immer die ECHTE Seitenzahl der PDF, damit die
+    Rückmeldung („S37 passt nicht") direkt auffindbar ist.
+    """
     import fitz
     from PIL import Image, ImageDraw
     doc = fitz.open(pfad)
+    von, bis = nur or (0, doc.page_count)
     kacheln = []
-    for i, page in enumerate(doc):
-        pix = page.get_pixmap(dpi=70)
+    for i in range(max(0, von), min(doc.page_count, bis)):
+        pix = doc[i].get_pixmap(dpi=70)
         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
         img.thumbnail((KACHEL, KACHEL), Image.LANCZOS)
         kachel = Image.new("RGB", (KACHEL, KACHEL + 18), "white")
@@ -71,12 +79,55 @@ def bogen(pfad: pathlib.Path, name: str, out: pathlib.Path) -> pathlib.Path:
     return out
 
 
+def alle(ab: int = 1, bis: int = 10**9) -> int:
+    """Kontaktbogen für jeden GEPOSTETEN Beitrag (aus den Manifesten).
+
+    Grundlage ist die gebaute Datei in `sortiert/` — also genau das, was in Discord
+    liegt. Lange Dokumente werden in Blätter zu je BLATT Seiten zerlegt, sonst sind
+    die Miniaturen unlesbar. Mehrmals vorhandene Dateien (gleicher Inhalt in zwei
+    Foren) werden übersprungen.
+    """
+    import csv
+    zeilen, gesehen = [], set()
+    for man in sorted(PROJECT.glob("manifest_*.csv")):
+        if man.stem.endswith(".result"):
+            continue
+        for r in csv.DictReader(man.open(newline="", encoding="utf-8"), delimiter=";"):
+            f = SORTIERT / r["datei"]
+            if f.suffix.lower() != ".pdf" or not f.exists() or f.name in gesehen:
+                continue
+            gesehen.add(f.name)
+            try:
+                doc = fitz.open(f)
+                n = doc.page_count
+                doc.close()
+            except Exception:                                  # noqa: BLE001
+                continue
+            if n >= 2:
+                zeilen.append((f, n, r["ziel_kanal"], r["titel"]))
+    zeilen.sort(key=lambda x: (x[2], x[0].name))
+    ausgewaehlt = zeilen[ab - 1:bis]
+    print(f"{len(zeilen)} mehrseitige Beiträge insgesamt, baue {len(ausgewaehlt)}")
+    for f, n, forum, titel in ausgewaehlt:
+        for blatt, start in enumerate(range(0, n, BLATT), 1):
+            teil = f"[{blatt}]" if n > BLATT else ""
+            name = f"{forum}__{f.stem[:44]}{teil}"
+            bogen(f, name, OUT / f"{name}.png", nur=(start, start + BLATT))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--datei", help="Pfad zur Quell-PDF")
     ap.add_argument("--risiko", action="store_true", help="Kandidaten auflisten")
     ap.add_argument("--top", type=int, default=0, help="Bögen für die ersten N Kandidaten bauen")
+    ap.add_argument("--alle", action="store_true", help="Bögen für ALLE geposteten mehrseitigen PDFs")
+    ap.add_argument("--ab", type=int, default=1, help="ab dem n-ten Beitrag")
+    ap.add_argument("--bis", type=int, default=10**9, help="bis zum n-ten Beitrag")
     args = ap.parse_args()
+
+    if args.alle:
+        return alle(args.ab, args.bis)
 
     if args.risiko or args.top:
         for rang, m, f, c in risiko()[:args.top or 40]:

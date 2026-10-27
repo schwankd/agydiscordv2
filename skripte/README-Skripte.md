@@ -153,17 +153,29 @@ verteilt werden. Ein Link funktioniert genau einmal und verfällt danach: er kan
 Gruppen weitergegeben und nicht dauerhaft auf Invite-Indexern gefunden werden.
 
 ```bash
-python3 invites.py gen --count 30 --label E1     # 30 Codes für die E1, 7 Tage gültig
-python3 invites.py export --label E1             # druckbare Liste zum Verteilen
+python3 invites.py gen --count 30 --label E1     # 30 Einmal-Codes (= 1 pro Person), 7 Tage
+python3 invites.py export --label E1 --unused    # Serienmail-CSV, Spalte "Empfaenger" leer
 python3 invites.py list                          # Ledger + echte Nutzung
 python3 invites.py revoke --label E1 --unused    # Leck eingrenzen (nur ungenutzte)
 ```
 
+**Ein Code = eine Person.** `gen --count N` erzeugt N Codes mit `max_uses=1` — der erste
+Beitritt verbraucht den Code. Für Nachzügler ein paar Reserve-Codes erzeugen.
+
+**Der Export ist serienmail-fähig**: `Nr;Kohorte;Link;gueltig_bis;Status;Betreff;Nachricht;Empfaenger`
+(UTF-8 mit BOM, `;` — öffnet direkt in Excel/LibreOffice). Betreff und Nachrichtentext sind
+fertig, du füllst nur **Empfaenger** aus.
+
+> **Datenschutz — bitte einhalten:** Die **gefüllte** CSV verkettet Code und Mailadresse und ist
+> damit personenbezogen. Sie bleibt lokal, kommt **nie** in Vault, Repo oder Cloud und wird nach
+> dem Versand gelöscht. Das Ledger (`~/.config/agy-discord/invites.json`) enthält dagegen nur
+> Codes und Kohorten — ohne jeden Personenbezug.
+
 - Voraussetzung: Bot-Rolle **„Poster"** braucht **Einladung erstellen**
   (`CREATE_INSTANT_INVITE`) im Zielkanal. Für `list` genügt der öffentliche
   Invite-Endpunkt — **kein** `MANAGE_GUILD` nötig.
-- **Labels sind Klasse/Kohorte** (`E1`, `GK-Mathe`), **nie Personennamen** — das Ledger
-  ist ohne Personenbezug. Bei einem Leck rotierst du genau diese Kohorte.
+- **Labels sind Klasse/Kohorte** (`E1`, `GK-Mathe`), **nie Personennamen**. Bei einem Leck
+  rotierst du genau diese Kohorte.
 - Ledger außerhalb des Vaults: `~/.config/agy-discord/invites.json` (`chmod 600`).
 - Zusätzlich von Hand: Server-Einstellungen → **Einladungen** → alte/Kanal-Links löschen;
   Server-**Discovery aus** lassen; Dauer-Links nur bewusst (`--no-expiry`).
