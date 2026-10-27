@@ -147,6 +147,15 @@ def ecke_rechteck(zeilen: list[tuple[float, float, float, float, str]]
     """
     drin = [y for x, y, w, h, _t in zeilen
             if x + w / 2 > ECKE_X and y + h / 2 < ECKE_H]
+    fliess = [t.strip() for x, y, w, h, t in zeilen
+              if x + w / 2 > ECKE_X and y + h / 2 < ECKE_H and len(t.strip()) > 25]
+    if fliess:
+        # In der Ecke steht Fließtext — also keine Handschrift, sondern Aufgabe
+        # oder Material. Ein Band würde die rechte Hälfte dieser Zeilen abschneiden
+        # (im Testfall bei „Flächenberechnungen" genau so passiert). Dann lieber
+        # nichts schwärzen und melden: der Mensch schaut an dieser Stelle nach,
+        # statt dass Inhalt verschwindet.
+        return None
     hoehe = max(0.06, min(ECKE_H, min(drin) if drin else ECKE_H))
     return (ECKE_X, 0.0, 1.0, hoehe)
 
@@ -185,8 +194,22 @@ def kopfzone(zeilen: list[tuple[float, float, float, float, str]]
         # Material über den Aufgaben: nur den Feldblock bzw. die Ecke schwärzen,
         # damit der Quellentext erhalten bleibt.
         ecke = ecke_rechteck(zeilen)
+        if ecke is None:
+            return [], (f"Material über den Aufgaben → Ecke enthält Fließtext, "
+                        f"NICHT geschwärzt, bitte ansehen{warnung}"), felder
         if felder_unten > 0:
-            unten = min(felder_unten + 0.03, BAND_MAX)
+            # Vor der Aufgabenzeile abdeckeln: der Feldblock darf das Band nicht in
+            # den Aufgabentext ziehen (0,3 % Überschuss schnitt im Testfall die
+            # Oberkante der ersten Aufgabe an). Überlappen Feld und Aufgabenzeile,
+            # hat das Feld Vorrang — ein Name darf nicht überleben, und die
+            # angeschnittene Aufgabe wird ausdrücklich gemeldet.
+            grenze = aufg - 0.004
+            if grenze >= felder_unten:
+                unten = min(felder_unten + 0.03, grenze, BAND_MAX)
+            else:
+                unten = min(felder_unten, BAND_MAX)
+                warnung += ("  !! Feld und erste Aufgabenzeile überlappen — Feld hat "
+                            "Vorrang, Aufgabe an dieser Stelle prüfen")
             return ([(0.0, 0.0, 1.0, unten)] + ([ecke] if unten < ecke[3] else [])), \
                 (f"Material über den Aufgaben → nur Feldblock ({unten:.1%}){warnung}"), felder
         return [ecke], \
@@ -196,16 +219,26 @@ def kopfzone(zeilen: list[tuple[float, float, float, float, str]]
         unten = min(felder_unten + 0.03, BAND_MAX)
         return [(0.0, 0.0, 1.0, unten)], f"Kopfdatenfeld + Zeilenabstand ({unten:.1%})", felder
     ecke = ecke_rechteck(zeilen)
+    if ecke is None:
+        return [], ("kein Feld/Aufgabe → Ecke enthält Fließtext, NICHT geschwärzt, "
+                    "bitte ansehen"), []
     return [ecke], f"kein Feld/Aufgabe → obere rechte Ecke ({ecke[3]:.0%})", []
 
 
 def gedeckt(zeilen: list[tuple[float, float, float, float, str]],
             rechtecke: list[tuple[float, float, float, float]]) -> list[str]:
-    """Welcher erkannte Text fällt unter die Schwärzung? Zum Nachprüfen."""
+    """Welcher erkannte Text fällt unter die Schwärzung? Zum Nachprüfen.
+
+    Kriterium ist die ÜBERLAPPUNG des Zeilenkastens, nicht sein Mittelpunkt: eine
+    halb angeschnittene Zeile ist genau der Schaden, den man sehen will. Mit dem
+    Mittelpunkt als Kriterium rutschte eine angeschnittene Aufgabenzeile durch die
+    Prüfung (im Testfall passiert).
+    """
     aus = []
     for x, y, w, h, t in zeilen:
-        mx, my = x + w / 2, y + h / 2
-        if any(x0 <= mx <= x1 and y0 <= my <= y1 for x0, y0, x1, y1 in rechtecke):
+        x2, y2 = x + w, y + h
+        if any(x < x1 and x2 > x0 and y < y1 and y2 > y0
+               for x0, y0, x1, y1 in rechtecke):
             aus.append(t.strip())
     return aus
 
@@ -293,7 +326,7 @@ def main() -> int:
     gesamt = doc.page_count
     n_seiten = min(args.max_seiten, gesamt) if args.max_seiten else gesamt
     neu = fitz.open()
-    vor_tiles, nach_tiles, geschwaerzt = [], [], 0
+    vor_tiles, nach_tiles, geschwaerzt, ohne = [], [], 0, 0
     print(f"{quelle.name}: {gesamt} Seiten"
           + (f", Probe auf {n_seiten}" if args.max_seiten else ""))
 
@@ -310,11 +343,14 @@ def main() -> int:
             unter_dem_band = gedeckt(zeilen_ocr, rechtecke)
             tmp.unlink(missing_ok=True)
             vorher = bild.copy()          # VOR dem Schwärzen sichern, sonst sind
-            stift = ImageDraw.Draw(bild)  # beide Bögen identisch (im Test aufgefallen)
-            for x0, y0, x1, y1 in rechtecke:
-                stift.rectangle([x0 * bild.width, y0 * bild.height,
-                                 x1 * bild.width, y1 * bild.height], fill=(0, 0, 0))
-            geschwaerzt += 1
+            if rechtecke:
+                stift = ImageDraw.Draw(bild)  # Vorher-Kopie liegt bereits vor
+                for x0, y0, x1, y1 in rechtecke:
+                    stift.rectangle([x0 * bild.width, y0 * bild.height,
+                                     x1 * bild.width, y1 * bild.height], fill=(0, 0, 0))
+                geschwaerzt += 1
+            else:
+                ohne += 1
             print(f"  Seite {i + 1:>3}: {grund}"
                   + (f" — darunter: {' | '.join(t[:26] for t in unter_dem_band[:3])}"
                      if unter_dem_band else " — darunter kein erkannter Text"))
@@ -337,7 +373,8 @@ def main() -> int:
         neu.save(ziel, deflate=True, garbage=4)
         neu.close()
         print(f"\n-> {ziel.name} ({ziel.stat().st_size / 1e6:.2f} MB), "
-              f"{geschwaerzt} von {n_seiten} Seiten geschwärzt")
+              f"{geschwaerzt} von {n_seiten} Seiten geschwärzt"
+              + (f", {ohne} NICHT geschwärzt (bitte ansehen)" if ohne else ""))
         print("   Seiten sind BILDER: kein Textlayer, nichts rückholbar.")
     else:
         neu.close()
