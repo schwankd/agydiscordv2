@@ -9,10 +9,15 @@ Zell-Seite geht als Antwort in den passenden bestehenden Zell-Thread.
 Beide Seiten sind vorher pixelgleich gegen das Original geprüft worden, und beide
 Threads hatten 0 fremde Nachrichten (Löschen verliert also nichts von anderen).
 
-Aufruf:  python3 fehler_korrigieren.py [--nur-pruefen]
+Server- und Thread-Kennungen stehen NICHT im Repo (siehe README-Skripte.md) —
+sie kommen aus der Umgebung:
+
+    GUILD=<server-id> NANO_ALT=<thread-id> BANK_ALT=<thread-id> \
+      python3 fehler_korrigieren.py [--nur-pruefen]
 """
 import argparse
 import csv
+import os
 import pathlib
 import sys
 
@@ -22,13 +27,23 @@ sys.path.insert(0, str(S))
 from agy_discord import Client, DiscordError, get_token   # noqa: E402
 from post_neu import load_map                             # noqa: E402
 
-GUILD = "1539350758481469500"             # neuer Server „Abendschule Dresden"
-NANO_ALT = "1558820521410428980"          # Thread biologie-gk, enthält beide Seiten
-BANK_ALT = "1558812863009783809"          # Thread englisch-lk, nur Banknoten-Fotos
 NANO_DATEI = "Biologie_GK_Nanotechnologie_kleinste_Teilchen_Sonstiges.pdf"
 ZELL_DATEI = "Biologie_GK_Zellaufbau_Bau_und_Funktionen_der_Zelle_Sonstiges.pdf"
 NANO_TITEL = "Nanotechnologie – kleinste Teilchen und Kohlenstoff"
 ZELL_TITEL = "Zellaufbau – Bau und Funktionen der Zelle"
+
+
+def _env_id(name: str, zweck: str) -> str:
+    """Kennung aus der Umgebung — bewusst keine IDs im Repository."""
+    wert = os.environ.get(name, "").strip()
+    if not wert:
+        raise DiscordError(
+            f"{name} fehlt ({zweck}).\n"
+            f"  Kennungen stehen NICHT im Repo. Vor dem Aufruf setzen, z. B.:\n"
+            f"    GUILD=<server-id> NANO_ALT=<thread-id> BANK_ALT=<thread-id> \\\n"
+            f"      python3 {pathlib.Path(__file__).name}"
+        )
+    return wert
 
 
 def main() -> int:
@@ -38,6 +53,10 @@ def main() -> int:
                     help="Thread mit den Banknoten-Fotos entfernen (nicht Schulinhalt)")
     args = ap.parse_args()
 
+    guild = _env_id("GUILD", "Server „Abendschule Dresden“")
+    nano_alt = _env_id("NANO_ALT", "Thread biologie-gk, enthält beide Seiten")
+    bank_alt = _env_id("BANK_ALT", "Thread englisch-lk, nur Banknoten-Fotos")
+
     kanal_map = load_map(BASE / "foren-map.resolved.csv")
     client = Client(get_token("AGY_TOKEN_NEU"))
     bio = kanal_map["biologie-gk"]
@@ -45,7 +64,7 @@ def main() -> int:
     # Ziel-Thread für die Zell-Seite suchen. Wichtig: Discord liefert AKTIVE
     # Threads nur mit Guild-ID (ohne sie sind alle 356 unsichtbar — siehe Skill).
     zell_thread = None
-    for t in client.forum_threads(bio["id"], GUILD):
+    for t in client.forum_threads(bio["id"], guild):
         if "Cytologie" in t["name"] and "Zellorganellen" in t["name"]:
             zell_thread = t
             break
@@ -66,8 +85,8 @@ def main() -> int:
     applied = [tags[t] for t in ["Sonstiges"] if t in tags]
 
     # 1) Alten Nanotech-Thread entfernen (0 fremde Nachrichten, Seiten gesichert)
-    client.request("DELETE", f"/channels/{NANO_ALT}")
-    print(f"alter Nanotech-Thread {NANO_ALT} entfernt")
+    client.request("DELETE", f"/channels/{nano_alt}")
+    print(f"alter Nanotech-Thread {nano_alt} entfernt")
 
     # 2) Nanotechnologie-Seite als eigener Thread neu anlegen
     content = (f"**{NANO_TITEL}**\nFach: biologie · Kurs: gk · Art: Sonstiges\n"
@@ -94,15 +113,15 @@ def main() -> int:
 
     # 4) Banknoten-Thread nur mit ausdrücklicher Freigabe
     if args.banknoten_loeschen:
-        nach = client.get(f"/channels/{BANK_ALT}/messages?limit=50")
+        nach = client.get(f"/channels/{bank_alt}/messages?limit=50")
         fremd = [m for m in nach if not m.get("author", {}).get("bot")]
         if fremd:
             print(f"!! {len(fremd)} fremde Nachrichten — NICHT gelöscht", file=sys.stderr)
         else:
-            client.request("DELETE", f"/channels/{BANK_ALT}")
-            print(f"Banknoten-Thread {BANK_ALT} entfernt (Datei bleibt lokal)")
+            client.request("DELETE", f"/channels/{bank_alt}")
+            print(f"Banknoten-Thread {bank_alt} entfernt (Datei bleibt lokal)")
     else:
-        print(f"Banknoten-Thread {BANK_ALT} unberührt (Freigabe fehlt: --banknoten-loeschen)")
+        print(f"Banknoten-Thread {bank_alt} unberührt (Freigabe fehlt: --banknoten-loeschen)")
 
     # 5) Kontrolle am Server
     print("\n### Kontrolle")
@@ -118,4 +137,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except DiscordError as err:
+        print(err, file=sys.stderr)
+        raise SystemExit(2)
