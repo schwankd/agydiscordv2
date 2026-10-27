@@ -25,10 +25,19 @@ Ablage in `eingang/neu/<forum>/` — der **Ordnername ist das Ziel-Forum**
 (`mathematik-gk`, `deutsch-lk`, `geschichte` …). Gültige Namen siehe `eingang/neu/README.md`.
 
 ```bash
-python3 skripte/add_material.py                    # indexieren -> eingang/_index_neu.csv
-python3 skripte/extract_text.py --match mathematik-gk
+python3 skripte/add_material.py            # indexieren -> eingang/_index_neu.csv
+python3 skripte/zuordnen.py --offen        # Inhalt -> Fach + Stufe (mit Beleg) -> zuordnung_vorschlag.csv
 # danach wie gewohnt: Topics bündeln -> classify.py -> post_neu.py
 ```
+
+Ist der Ordnername unbrauchbar (`zeug`, `sammlung`, …), wird nichts verworfen: die Datei
+landet im Index und wird **aus dem Inhalt** zugeordnet — gegen das Archiv, das als
+beschriftete Referenz dient. Identischer Inhalt im Archiv → dessen Stufen werden
+übernommen; sonst Mehrheitsentscheid der ähnlichsten Dokumente; bei unklarer Stufe werden
+**beide** Foren vorgeschlagen (GK *und* LK), denn lieber doppelt als eine Lücke.
+
+`classify.py` unterstützt dafür `"ziele": ["…-gk", "…-lk"]` je Thema: der Inhalt wird einmal
+gebaut, je Ziel unter eigenem Namen kopiert, eine Manifest-Zeile pro Forum.
 
 Warum so: das Archiv-Material kommt über den Index (Server + Kanal aus dem Alt-Server).
 Für selbst abgelegtes Material ist der Kanalname schon das Ziel-Forum, deshalb trägt

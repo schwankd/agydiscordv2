@@ -220,19 +220,29 @@ def main() -> int:
 
     SORTIERT.mkdir(parents=True, exist_ok=True)
     # Nur die Dateien DIESES Fachs ersetzen — andere Wellen bleiben liegen.
-    faecher = {slug(p["ziel"].split("-")[0].capitalize()) for p in posts}
+    faecher = {slug(z.split("-")[0].capitalize())
+               for p in posts for z in (p.get("ziele") or [p["ziel"]])}
     old = [p for p in SORTIERT.glob("*.pdf") if p.name.split("_")[0] in faecher]
     for p in old:
         p.unlink()
     if old:
         print(f"sortiert/: {len(old)} Datei(en) dieses Fachs ersetzt")
 
+    def freier_name(basis: str, endung: str) -> pathlib.Path:
+        dest = SORTIERT / f"{basis}{endung}"
+        n = 2
+        while dest.exists():
+            dest = SORTIERT / f"{basis}-{n}{endung}"
+            n += 1
+        return dest
+
     used: set[int] = set()
     rows, problems = [], []
     for i, post in enumerate(posts, 1):
-        ziel = post["ziel"]
-        fach = ziel.split("-")[0].capitalize()
-        kurs = post.get("kurs") or kurs_of(ziel)
+        # Ein Thema kann bewusst in mehreren Foren stehen (`ziele`), z. B. wenn es
+        # sowohl im GK als auch im LK behandelt wird. Der Inhalt ist derselbe,
+        # die Stufe steckt im Dateinamen — gebaut wird einmal, dann kopiert.
+        ziele = post.get("ziele") or [post["ziel"]]
         ids = post["ids"]
         for k in ids:
             if k in used:
@@ -242,32 +252,44 @@ def main() -> int:
         if len(files) != len(ids):
             problems.append(f"Post {i}: ungültige Indizes {ids}")
             continue
-        base = f"{slug(fach)}_{kurs}_{slug(post['thema'])}_{slug(post['art'])}"
-        # Büro-Datei allein -> Original anhängen (verlustfrei), sonst alles in EINE PDF
         original = len(files) == 1 and files[0].suffix.lower() in ATTACH_EXT
         ext = files[0].suffix.lower() if original else ".pdf"
-        dest = SORTIERT / f"{base}{ext}"
-        n = 2
-        while dest.exists():
-            dest = SORTIERT / f"{base}-{n}{ext}"
-            n += 1
-        if original:
-            shutil.copy2(files[0], dest)
-            outs = [dest]
-        else:
-            bundle(files, dest)
-            outs = compress(dest)
-        print(f"[{i:>2}] {ziel:<14} {dest.name[:58]:<58} {len(files)} Datei(en) "
-              f"{dest.stat().st_size/1e6:.1f} MB")
-        for pi, fpart in enumerate(outs):
-            notiz = post.get("notiz", "")
-            if len(outs) > 1:
-                notiz = (notiz + f" | Teil {pi + 1}/{len(outs)}").strip(" |")
-            rows.append({
-                "datei": fpart.name, "fach": fach, "kurs": kurs,
-                "thema": post["thema"], "art": post["art"], "titel": post["titel"],
-                "ziel_kanal": ziel, "tags": post["art"], "status": "neu", "notiz": notiz,
-            })
+        gebaut: list[pathlib.Path] = []
+        basis1 = ""
+        for ziel in ziele:
+            fach = ziel.split("-")[0].capitalize()
+            kurs = post.get("kurs") or kurs_of(ziel)
+            base = f"{slug(fach)}_{kurs}_{slug(post['thema'])}_{slug(post['art'])}"
+            if not gebaut:
+                dest = freier_name(base, ext)
+                # Büro-Datei allein -> Original anhängen (verlustfrei), sonst EINE PDF
+                if original:
+                    shutil.copy2(files[0], dest)
+                    outs = [dest]
+                else:
+                    bundle(files, dest)
+                    outs = compress(dest)
+                gebaut, basis1 = outs, base
+            else:
+                outs = []
+                for teil in gebaut:                      # gleicher Inhalt, anderer Name
+                    neu = freier_name(base, teil.name[len(basis1):])
+                    shutil.copy2(teil, neu)
+                    outs.append(neu)
+            print(f"[{i:>2}] {ziel:<14} {outs[0].name[:58]:<58} {len(files)} Datei(en) "
+                  f"{outs[0].stat().st_size/1e6:.1f} MB"
+                  + ("   (gleicher Inhalt wie voriges Ziel)" if len(ziele) > 1 else ""))
+            for pi, fpart in enumerate(outs):
+                notiz = post.get("notiz", "")
+                if len(ziele) > 1:
+                    notiz = (notiz + f" | in {len(ziele)} Foren").strip(" |")
+                if len(outs) > 1:
+                    notiz = (notiz + f" | Teil {pi + 1}/{len(outs)}").strip(" |")
+                rows.append({
+                    "datei": fpart.name, "fach": fach, "kurs": kurs,
+                    "thema": post["thema"], "art": post["art"], "titel": post["titel"],
+                    "ziel_kanal": ziel, "tags": post["art"], "status": "neu", "notiz": notiz,
+                })
 
     missing = [i for i in range(len(kept)) if i not in used]
     print(f"\n{len(rows)} Manifest-Zeilen aus {len(posts)} Posts")

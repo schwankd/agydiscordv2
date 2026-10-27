@@ -310,6 +310,52 @@ def check_blank_pages() -> list[str]:
     return problems
 
 
+def check_luecken() -> list[str]:
+    """LÜCKEN — lag ein Inhalt im Archiv in Stufe X, wurde aber nur in Y gepostet?
+
+    Das Archiv ist die Referenz: derselbe Inhalt lag dort real in bestimmten
+    Stufen. Wird er im neuen Server nur in einer davon gepostet, fehlt er in der
+    anderen — auch wenn das fachlich richtig aussieht. Geprüft wird über den
+    Inhalts-Hash, also nicht über Namen.
+    """
+    print()
+    print("=" * 78)
+    print("6  LÜCKEN — Inhalt im Archiv in Stufe X, aber nur in Y gepostet?")
+    print("=" * 78)
+    archiv: dict[str, set[str]] = collections.defaultdict(set)
+    gepostet: dict[str, set[str]] = collections.defaultdict(set)
+    name_von: dict[str, str] = {}
+    for m in subjects():
+        files, klass = clusters(m)
+        for c in klass:
+            for i in c["ids"]:
+                if not 0 <= i < len(files):
+                    continue
+                h = files[i].get("hash") or "?"
+                archiv[h].add(files[i]["ziel"])
+                gepostet[h].add(c["ziel"])
+                name_von[h] = files[i]["datei"]
+
+    luecken, doppelt = [], []
+    for h, a in archiv.items():
+        p = gepostet.get(h, set())
+        if not a or not p:
+            continue
+        fehlt = a - p
+        if fehlt:
+            luecken.append((h, name_von[h], sorted(a), sorted(p), sorted(fehlt)))
+        if len(p) > 1:
+            doppelt.append((h, name_von[h], sorted(p)))
+
+    print(f"  {len(archiv)} verschiedene Inhalte geprüft")
+    print(f"  Inhalte, die im Archiv in mehreren Stufen lagen und auch so gepostet wurden: {len(doppelt)}")
+    print(f"  LÜCKEN (Archivstufe ohne Beitrag): {len(luecken)}")
+    for h, name, a, p, fehlt in sorted(luecken, key=lambda x: x[3]):
+        print(f"    {name[:56]:<56}")
+        print(f"       Archiv: {a}  |  gepostet: {p}  |  FEHLT: {fehlt}")
+    return [f"Lücke {name_von[h]}: Archiv {a}, gepostet {p}" for h, _, a, p, _ in luecken]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--live", action="store_true", help="Titel zusätzlich am echten Server prüfen")
@@ -325,6 +371,7 @@ def main() -> int:
     check_cross(pro_forum)
     bundle = check_bundles()
     titel = check_title_content()
+    luecken = check_luecken()
     leer = check_blank_pages() if args.blank else []
 
     print()
@@ -335,6 +382,7 @@ def main() -> int:
     print(f"  Dopplungen      : {len([p for p in problems if 'doppelt' in p or 'LIVE' in p])} Auffälligkeiten")
     print(f"  Bündelung       : {len(bundle)} schwache Bündel (Textähnlichkeit, kein Urteil)")
     print(f"  Titel↔Inhalt    : {len(titel)} Themen mit schwachem Titelbezug")
+    print(f"  Lücken          : {len(luecken)} Inhalte fehlen in einer Archivstufe")
     print(f"  Leere Seiten    : {len(leer)} PDFs betroffen" if args.blank else "  Leere Seiten    : nicht geprüft (--blank)")
     print("  Themengrenzen   : NICHT automatisch prüfbar — Textstatistik trennt eine gemischte")
     print("                    PDF nicht von einer normalen Zusammenfassung. Sichtprüfung über")

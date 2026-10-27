@@ -23,7 +23,8 @@ verändern. Es werden ausschließlich GET-Requests und CDN-Downloads gemacht.
 
 | Skript | Rolle |
 |---|---|
-| `add_material.py` | **Eingang** für neu abgelegtes Material: `eingang/neu/<forum>/` in den Index aufnehmen |
+| `add_material.py` | **Eingang** für neu abgelegtes Material: `eingang/neu/<forum>/` in den Index aufnehmen; Ordnername tolerant, Fach und Stufe getrennt aufgelöst |
+| `zuordnen.py` | **Zuordnung aus dem Inhalt**: neues Material gegen das Archiv (beschriftete Referenz) halten. `--pruefen` misst die Trefferquoten, `--offen` schreibt `zuordnung_vorschlag.csv` |
 | `unpack_zips.py` | ZIP-Sammlungen entpacken und als Index-Zeilen nachtragen (mit CP1252-Mojibake-Fix) |
 | `extract_text.py` | Textebene (pymupdf) bzw. OCR (Apple Vision) je Datei → `_text_<fach>.json` |
 | `digest.py` | Kurzvorschau je Datei als Hilfe beim Themen-Clustering |
@@ -31,6 +32,19 @@ verändern. Es werden ausschließlich GET-Requests und CDN-Downloads gemacht.
 | `pruef_csv.py` | Prüfliste `problematisch_<fach>.csv` (Rechte/§4, kein Lerninhalt, OCR unklar) + Dateikopien in `_pruefen/` |
 | `deepcheck.py` | Nachkontrolle: Vollständigkeit (nichts verloren), Dopplungen (auch am Live-Server), Bündelung, leere Seiten |
 | `sheet.py` | Kontaktbogen — alle Seiten einer PDF als ein Bild, für die Sichtprüfung gemischter Quellen |
+
+> **Ein Thema darf bewusst in mehreren Foren stehen** (`"ziele": ["x-gk", "x-lk"]` im
+> `_klass_…json`): der Inhalt wird einmal gebaut und je Ziel unter eigenem Namen kopiert,
+> es entsteht eine Manifest-Zeile pro Forum. Für Inhalte, die in GK *und* LK behandelt
+> werden — lieber doppelt als eine Lücke. Die Dublettenprüfung schlägt dabei nicht an,
+> weil die Indizes einmalig bleiben.
+>
+> **Zuordnung aus dem Inhalt ist ein Vorschlag, keine Wahrheit.** Gemessen per
+> Leave-one-out über 583 Archivdokumente: Fach 89 %, Fach **und** Stufe 78 %. Die Grenze
+> liegt nicht am Textumfang, sondern daran, dass derselbe Inhalt im Alt-Server real in
+> zwei Stufen lag (90 Fälle) und viele Beispiele Handyfotos mit dünnem OCR sind. Deshalb:
+> identischer Inhalt im Archiv → dessen Stufen (kein Raten); sonst Mehrheitsentscheid;
+> bei unklarer Stufe **beide** Foren; bei unlesbarem Text `OFFEN` zum Ansehen.
 
 > **Gemischte Quelldateien sind nicht automatisch erkennbar.** Gemessen und verworfen:
 > Seiten-Ähnlichkeit, „fremde Seite im eigenen Dokument", Seitengrößen-Wechsel — alle drei

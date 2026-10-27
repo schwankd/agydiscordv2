@@ -104,7 +104,10 @@ def main() -> int:
     for idx in sorted(EINGANG.glob("_index*.csv")):     # Archiv + neu abgelegtes Material
         rows += [r for r in csv.DictReader(idx.open(newline="", encoding="utf-8"), delimiter=";")
                  if (r.get("dateiname") or "").strip()
-                 and args.match.lower() in r["kanal"].lower()
+                 # Kanal ODER Server: damit holt "--match neu" alles selbst
+                 # abgelegte Material auf einmal.
+                 and (args.match.lower() in r["kanal"].lower()
+                      or args.match.lower() in (r.get("server") or "").lower())
                  and not r.get("fehler")
                  and pathlib.Path(r["dateiname"] or "").suffix.lower() not in CONTAINER_EXT
                  and r.get("gespeichert")]
