@@ -147,8 +147,12 @@ def ecke_rechteck(zeilen: list[tuple[float, float, float, float, str]]
     """
     drin = [y for x, y, w, h, _t in zeilen
             if x + w / 2 > ECKE_X and y + h / 2 < ECKE_H]
+    # Fließtext in der Ecke? Kriterium ist die ÜBERLAPPUNG, nicht der Mittelpunkt:
+    # ein Blocksatz-Aufgabentext endet bei x≈55 %, sein Mittelpunkt liegt aber bei
+    # 34 % — mit dem Mittelpunkt geprüft blieb er unentdeckt und das Eckband schnitt
+    # die Zeilenenden ab (im Testfall bei „Flächenberechnungen" passiert).
     fliess = [t.strip() for x, y, w, h, t in zeilen
-              if x + w / 2 > ECKE_X and y + h / 2 < ECKE_H and len(t.strip()) > 25]
+              if y < ECKE_H and (x + w) > ECKE_X + 0.03 and len(t.strip()) > 25]
     if fliess:
         # In der Ecke steht Fließtext — also keine Handschrift, sondern Aufgabe
         # oder Material. Ein Band würde die rechte Hälfte dieser Zeilen abschneiden
@@ -194,9 +198,6 @@ def kopfzone(zeilen: list[tuple[float, float, float, float, str]]
         # Material über den Aufgaben: nur den Feldblock bzw. die Ecke schwärzen,
         # damit der Quellentext erhalten bleibt.
         ecke = ecke_rechteck(zeilen)
-        if ecke is None:
-            return [], (f"Material über den Aufgaben → Ecke enthält Fließtext, "
-                        f"NICHT geschwärzt, bitte ansehen{warnung}"), felder
         if felder_unten > 0:
             # Vor der Aufgabenzeile abdeckeln: der Feldblock darf das Band nicht in
             # den Aufgabentext ziehen (0,3 % Überschuss schnitt im Testfall die
@@ -210,10 +211,17 @@ def kopfzone(zeilen: list[tuple[float, float, float, float, str]]
                 unten = min(felder_unten, BAND_MAX)
                 warnung += ("  !! Feld und erste Aufgabenzeile überlappen — Feld hat "
                             "Vorrang, Aufgabe an dieser Stelle prüfen")
-            return ([(0.0, 0.0, 1.0, unten)] + ([ecke] if unten < ecke[3] else [])), \
-                (f"Material über den Aufgaben → nur Feldblock ({unten:.1%}){warnung}"), felder
+            return ([(0.0, 0.0, 1.0, unten)]
+                    + ([ecke] if ecke is not None and unten < ecke[3] else [])), \
+                (f"Material über den Aufgaben → Feldblock ({unten:.1%}){warnung}"), felder
+        # Kein Feld, kein Kopfbereich: nur die Ecke. Enthält sie aber Fließtext,
+        # wird NICHT geschwärzt — dann würde die rechte Hälfte von Aufgabenzeilen
+        # abgeschnitten — sondern gemeldet, damit der Mensch dort nachsieht.
+        if ecke is None:
+            return [], (f"Material über den Aufgaben → Ecke enthält Fließtext, "
+                        f"NICHT geschwärzt, bitte ansehen{warnung}"), felder
         return [ecke], \
-            (f"Material über den Aufgaben → nur obere rechte Ecke "
+            (f"Material über den Aufgaben → obere rechte Ecke "
              f"({ecke[3]:.0%}){warnung}"), felder
     if felder_unten > 0:
         unten = min(felder_unten + 0.03, BAND_MAX)
