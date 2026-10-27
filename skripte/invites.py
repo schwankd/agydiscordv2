@@ -96,12 +96,29 @@ def invite_meta(client: Client, code: str) -> dict:
         return {}
 
 
+def expires_epoch(m: dict) -> float | None:
+    """expires_at kommt je nach API-Stand als Epoch-Zahl ODER ISO-8601-String."""
+    exp = m.get("expires_at")
+    if exp is None:
+        return None
+    if isinstance(exp, (int, float)):
+        return float(exp)
+    try:
+        return dt.datetime.fromisoformat(str(exp).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        try:                                   # ohne Zeitzone -> als UTC lesen
+            return dt.datetime.fromisoformat(str(exp)[:19]).replace(
+                tzinfo=dt.timezone.utc).timestamp()
+        except ValueError:
+            return None
+
+
 def live_status(client: Client, row: dict) -> tuple[int, bool, str]:
     m = invite_meta(client, row["code"])
     if not m:
         return row.get("uses", 0) or 0, True, "gelöscht/ungültig"
     uses = m.get("uses", 0)
-    exp = m.get("expires_at")
+    exp = expires_epoch(m)
     if m.get("max_uses") and uses >= m["max_uses"]:
         state = "verbraucht"
     elif exp and exp < time.time():
@@ -136,11 +153,14 @@ def cmd_gen(args) -> int:
         try:
             inv = client.post(f"/channels/{cid}/invites", body)
         except DiscordError as err:
-            msg = str(err)
-            if "403" in msg:
-                print("\n403 — der Bot hat kein 'Einladung erstellen'.\n"
-                      "  Discord → Server-Einstellungen → Rollen → 'Poster' →\n"
-                      "  'Einladung erstellen' aktivieren (CREATE_INSTANT_INVITE).", file=sys.stderr)
+            if "403" in str(err):
+                print(f"\n403 — Einladung erstellen in #{cname} verweigert.\n"
+                      "  Ursache 1: Bot-Rolle braucht 'Einladung erstellen' (CREATE_INSTANT_INVITE)\n"
+                      "             → Server-Einstellungen → Rollen → 'Poster'.\n"
+                      "  Ursache 2: Der KANAL verweigert es. Willkommens-/Regel-Kanäle haben für\n"
+                      "             @everyone ein Deny. Fix: Kanal → Berechtigungen → Rolle 'Poster'\n"
+                      "             → 'Einladung erstellen' erlauben, ODER anderen Kanal nehmen:\n"
+                      f"             python3 invites.py gen ... --channel allgemein", file=sys.stderr)
             raise
         rows.append({
             "code": inv["code"], "label": args.label,
@@ -175,13 +195,15 @@ def cmd_list(args) -> int:
 
 
 def cmd_revoke(args) -> int:
+    if not (args.code or args.label):
+        raise DiscordError("--code oder --label angeben.")
     client = Client(get_token(args.token))
     rows = load_ledger()
     keep, gone = [], []
     for r in rows:
         match = (args.code and r["code"] == args.code) or \
-                (args.label and r.get("label") == args.label and
-                 (True if not args.unused else live_status(client, r)[0] == 0))
+                (bool(args.label) and r.get("label") == args.label and
+                 (True if not args.unused else live_status(client, r)[2] != "verbraucht"))
         if not match:
             keep.append(r)
             continue
@@ -189,10 +211,27 @@ def cmd_revoke(args) -> int:
             client.request("DELETE", f"/invites/{r['code']}")
             gone.append(r["code"])
         except DiscordError as err:
-            print(f"  {r['code']}: {err}", file=sys.stderr)
-    if gone:
-        save_ledger(keep)
+            keep.append(r)                       # Fehlschlag: Eintrag bleibt im Ledger
+            if "404" in str(err) or "403" in str(err):
+                print(f"  {r['code']}: nicht widerrufbar — dem Bot fehlt MANAGE_CHANNELS im "
+                      "Kanal\n      oder MANAGE_GUILD. Notfalls in der Discord-UI löschen:\n"
+                      "      Server-Einstellungen → Einladungen.", file=sys.stderr)
+            else:
+                print(f"  {r['code']}: {err}", file=sys.stderr)
+    save_ledger(keep)
     print(f"{len(gone)} Einladung(en) widerrufen, {len(keep)} im Ledger.")
+    return 0 if gone or not rows else 1
+
+
+def cmd_forget(args) -> int:
+    """Ledger-Eintrag entfernen, ohne Discord anzufassen (nach Löschen in der UI)."""
+    if not (args.code or args.label):
+        raise DiscordError("--code oder --label angeben.")
+    rows = load_ledger()
+    keep = [r for r in rows
+            if not (r["code"] == args.code if args.code else r.get("label") == args.label)]
+    save_ledger(keep)
+    print(f"{len(rows) - len(keep)} Eintrag/Einträge aus dem Ledger entfernt, {len(keep)} übrig.")
     return 0
 
 
@@ -233,8 +272,8 @@ def cmd_export(args) -> int:
         for n, r in enumerate(rows, 1):
             m = invite_meta(client, r["code"])
             link = f"https://discord.gg/{r['code']}"
-            exp = (dt.datetime.fromtimestamp(m["expires_at"]).strftime("%d.%m.%Y")
-                   if m.get("expires_at") else "nie")
+            ts = expires_epoch(m)
+            exp = dt.datetime.fromtimestamp(ts).strftime("%d.%m.%Y") if ts else "nie"
             w.writerow([n, r.get("label", ""), link, exp, live_status(client, r)[2],
                         MAIL_BETREFF, mail_text(link), ""])
     out.chmod(0o600)
@@ -271,6 +310,11 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--label")
     r.add_argument("--unused", action="store_true", help="nur noch nicht genutzte")
     r.set_defaults(func=cmd_revoke)
+
+    f = sub.add_parser("forget", help="Ledger-Eintrag entfernen (nach UI-Löschung)")
+    f.add_argument("--code")
+    f.add_argument("--label")
+    f.set_defaults(func=cmd_forget)
 
     e = sub.add_parser("export", help="als CSV (Serienmail-fähig) ausgeben")
     e.add_argument("--label")

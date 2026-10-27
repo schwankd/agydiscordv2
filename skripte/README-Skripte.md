@@ -157,6 +157,7 @@ python3 invites.py gen --count 30 --label E1     # 30 Einmal-Codes (= 1 pro Pers
 python3 invites.py export --label E1 --unused    # Serienmail-CSV, Spalte "Empfaenger" leer
 python3 invites.py list                          # Ledger + echte Nutzung
 python3 invites.py revoke --label E1 --unused    # Leck eingrenzen (nur ungenutzte)
+python3 invites.py forget --code abc123          # Ledger aufräumen (nach UI-Löschung)
 ```
 
 **Ein Code = eine Person.** `gen --count N` erzeugt N Codes mit `max_uses=1` — der erste
@@ -171,9 +172,16 @@ fertig, du füllst nur **Empfaenger** aus.
 > dem Versand gelöscht. Das Ledger (`~/.config/agy-discord/invites.json`) enthält dagegen nur
 > Codes und Kohorten — ohne jeden Personenbezug.
 
-- Voraussetzung: Bot-Rolle **„Poster"** braucht **Einladung erstellen**
-  (`CREATE_INSTANT_INVITE`) im Zielkanal. Für `list` genügt der öffentliche
-  Invite-Endpunkt — **kein** `MANAGE_GUILD` nötig.
+- **Rechte:** Die Bot-Rolle („Poster") braucht **Einladung erstellen**
+  (`CREATE_INSTANT_INVITE`). Das Recht gilt **pro Kanal** — `#start-hier` und `#regeln`
+  verweigern es @everyone per Deny. Damit der Default-Kanal funktioniert, dort einmalig
+  erlauben: **#start-hier → Berechtigungen → Rolle „Poster" → Einladung erstellen**.
+  Ohne diesen Klick: `--channel allgemein` nutzen (funktioniert sofort).
+  Für `list`/`export` genügt der öffentliche Invite-Endpunkt — **kein** `MANAGE_GUILD` nötig.
+- **Widerruf:** `DELETE /invites/{code}` braucht **`MANAGE_CHANNELS`** im Kanal (oder
+  `MANAGE_GUILD` für alle). Hat der Bot das nicht, meldet `revoke` das und du löschst den
+  Link in der UI: **Server-Einstellungen → Einladungen**. Danach den Eintrag lokal
+  aufräumen: `python3 invites.py forget --code <code>`.
 - **Labels sind Klasse/Kohorte** (`E1`, `GK-Mathe`), **nie Personennamen**. Bei einem Leck
   rotierst du genau diese Kohorte.
 - Ledger außerhalb des Vaults: `~/.config/agy-discord/invites.json` (`chmod 600`).

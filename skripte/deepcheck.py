@@ -267,14 +267,17 @@ def check_title_content() -> list[str]:
 # ---------------------------------------------------------------- 5 Themengrenzen
 
 def check_blank_pages() -> list[str]:
-    """Leere Seiten in den gebauten PDFs (Rückseiten von Scans) — messbar, nicht geraten.
+    """Leere Seiten in den gebauten PDFs — gezählt bei 200 dpi, pixelgenau.
 
-    Eine Seite gilt als leer, wenn kaum Tinte auf dem Papier ist. Anders als die
-    Themenerkennung ist das ein sauberes Maß.
+    FALLE, die hier behoben wurde: eine frühere Fassung rastete auf 36 dpi und
+    zählte nur Pixel unter 200. Beim Verkleinern mitteln sich blasse Bleistift-
+    striche und hellgraue Flächen nach weiß, dadurch galten Seiten mit Inhalt als
+    leer (im Nachweis: Mathe-Test 3 „7/12 leer" — real 600.000+ dunkle Pixel je
+    Seite). Jetzt wird bei 200 dpi gezählt, ob es überhaupt nicht-weiße Pixel gibt.
     """
     print()
     print("=" * 78)
-    print("5  LEERE SEITEN in den gebauten PDFs")
+    print("5  LEERE SEITEN in den gebauten PDFs (200 dpi, pixelgenau)")
     print("=" * 78)
     import fitz
     from PIL import Image
@@ -290,11 +293,11 @@ def check_blank_pages() -> list[str]:
             doc = fitz.open(f)
             blank = []
             for i, page in enumerate(doc):
-                pix = page.get_pixmap(dpi=36)
-                img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-                grau = img.convert("L")
-                dunkel = sum(1 for px in grau.getdata() if px < 200)
-                if dunkel / (grau.width * grau.height) < 0.005:
+                pix = page.get_pixmap(dpi=200)
+                grau = Image.frombytes("RGB", (pix.width, pix.height),
+                                       pix.samples).convert("L")
+                unter = sum(1 for px in grau.getdata() if px < 250)
+                if unter <= 200 and not (page.get_text() or "").strip():
                     blank.append(i + 1)
             n = doc.page_count
             doc.close()

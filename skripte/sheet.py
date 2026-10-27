@@ -16,9 +16,12 @@ import json
 import pathlib
 import sys
 
+import fitz
+from PIL import Image, ImageDraw
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from agy_discord import CONTAINER_EXT  # noqa: E402
-from classify import PROJECT  # noqa: E402
+from classify import PROJECT, SORTIERT  # noqa: E402
 from deepcheck import clusters, subjects  # noqa: E402
 
 OUT = PROJECT / "_pruefen" / "bogen"
@@ -55,8 +58,6 @@ def bogen(pfad: pathlib.Path, name: str, out: pathlib.Path,
     Die Beschriftung zeigt immer die ECHTE Seitenzahl der PDF, damit die
     Rückmeldung („S37 passt nicht") direkt auffindbar ist.
     """
-    import fitz
-    from PIL import Image, ImageDraw
     doc = fitz.open(pfad)
     von, bis = nur or (0, doc.page_count)
     kacheln = []
