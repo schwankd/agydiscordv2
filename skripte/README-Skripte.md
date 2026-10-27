@@ -23,11 +23,20 @@ verändern. Es werden ausschließlich GET-Requests und CDN-Downloads gemacht.
 
 | Skript | Rolle |
 |---|---|
+| `add_material.py` | **Eingang** für neu abgelegtes Material: `eingang/neu/<forum>/` in den Index aufnehmen |
 | `unpack_zips.py` | ZIP-Sammlungen entpacken und als Index-Zeilen nachtragen (mit CP1252-Mojibake-Fix) |
 | `extract_text.py` | Textebene (pymupdf) bzw. OCR (Apple Vision) je Datei → `_text_<fach>.json` |
 | `digest.py` | Kurzvorschau je Datei als Hilfe beim Themen-Clustering |
 | `classify.py` | Themen bündeln → je Thema EINE PDF in `sortiert/` + `manifest_<fach>.csv` (komprimiert auf < 9,4 MB) |
 | `pruef_csv.py` | Prüfliste `problematisch_<fach>.csv` (Rechte/§4, kein Lerninhalt, OCR unklar) + Dateikopien in `_pruefen/` |
+| `deepcheck.py` | Nachkontrolle: Vollständigkeit (nichts verloren), Dopplungen (auch am Live-Server), Bündelung, leere Seiten |
+| `sheet.py` | Kontaktbogen — alle Seiten einer PDF als ein Bild, für die Sichtprüfung gemischter Quellen |
+
+> **Gemischte Quelldateien sind nicht automatisch erkennbar.** Gemessen und verworfen:
+> Seiten-Ähnlichkeit, „fremde Seite im eigenen Dokument", Seitengrößen-Wechsel — alle drei
+> trennen eine PDF mit zwei Themen nicht von einer normalen Zusammenfassung. Verlässlich ist
+> nur der Blick auf die Seiten (`sheet.py`). Priorität: mehrseitige PDFs ohne Textlayer über
+> 6 Seiten, weil die Text-Extraktion dort nur die ersten 6 Seiten liest.
 
 Format des Manifests: siehe `manifest.beispiel.csv` (Spalten
 `datei;fach;kurs;thema;art;titel;ziel_kanal;tags;status;notiz`).

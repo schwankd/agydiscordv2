@@ -48,11 +48,15 @@ ALIAS = {"mathe": "mathematik"}   # Alt-Kanalkürzel -> offizieller Fachname
 
 
 def ziel_of(kanal: str, server: str) -> str:
-    """Alt-Kanalname -> Forum-Name auf dem neuen Server.
+    """Kanalname (aus dem Index) -> Forum-Name auf dem neuen Server.
 
     Ohne Suffix = E-Phase, `gk-`/`lk-` = Kurs. Das Kürzel wird zuerst auf den
     offiziellen Fachnamen gebracht (gk-mathe -> mathematik-gk).
+    Selbst abgelegtes Material (`add_material.py`) trägt das Ziel-Forum schon
+    als Kanalnamen -> unverändert übernehmen.
     """
+    if server.startswith("neu"):
+        return kanal
     if kanal in NOISE:
         return ""
     if kanal.startswith(("gk-", "lk-")):

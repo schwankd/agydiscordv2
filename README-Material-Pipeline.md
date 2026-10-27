@@ -12,11 +12,27 @@ Zentrale Ablage + Ablauf zum Sortieren und Einpflegen von Lernmaterial in den AG
 
 | Pfad | Zweck |
 |------|-------|
-| [[eingang/]] | Roh-Material reinwerfen (PDF / Fotos) |
+| [[eingang/neu/]] | **Eingang für neues Material** — Ordner = Ziel-Forum (`eingang/neu/mathematik-gk/`) |
+| [[eingang/]] | Roh-Material + Index (`_index_alt.csv` Archiv, `_index_neu.csv` neu abgelegt) |
 | [[sortiert/]] | fertig benannte, ggf. nach Thema gesplittete Dateien |
 | [[skripte/]] | Hilfsskripte (OCR, Klassifikation, Posting) |
 | [[foren-map.csv]] | Routing: Fach + Kurs → Forum-Kanal (+ Kanal-ID, Tags) |
 | [[manifest.csv]] | Arbeitsliste / Ergebnis der Pipeline (das eigentliche Erzeugnis) |
+
+## Neues Material ablegen
+
+Ablage in `eingang/neu/<forum>/` — der **Ordnername ist das Ziel-Forum**
+(`mathematik-gk`, `deutsch-lk`, `geschichte` …). Gültige Namen siehe `eingang/neu/README.md`.
+
+```bash
+python3 skripte/add_material.py                    # indexieren -> eingang/_index_neu.csv
+python3 skripte/extract_text.py --match mathematik-gk
+# danach wie gewohnt: Topics bündeln -> classify.py -> post_neu.py
+```
+
+Warum so: das Archiv-Material kommt über den Index (Server + Kanal aus dem Alt-Server).
+Für selbst abgelegtes Material ist der Kanalname schon das Ziel-Forum, deshalb trägt
+`ziel_of()` es unverändert durch — dieselbe Kette, dieselben Werkzeuge, keine Sonderfälle.
 
 ## Dateinamen-Konvention
 

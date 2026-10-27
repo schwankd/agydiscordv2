@@ -100,13 +100,14 @@ def main() -> int:
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    rows = [r for r in csv.DictReader((EINGANG / "_index_alt.csv").open(newline="", encoding="utf-8"),
-                                     delimiter=";")
-            if (r.get("dateiname") or "").strip()
-            and args.match.lower() in r["kanal"].lower()
-            and not r.get("fehler")
-            and pathlib.Path(r["dateiname"] or "").suffix.lower() not in CONTAINER_EXT
-            and r.get("gespeichert")]
+    rows = []
+    for idx in sorted(EINGANG.glob("_index*.csv")):     # Archiv + neu abgelegtes Material
+        rows += [r for r in csv.DictReader(idx.open(newline="", encoding="utf-8"), delimiter=";")
+                 if (r.get("dateiname") or "").strip()
+                 and args.match.lower() in r["kanal"].lower()
+                 and not r.get("fehler")
+                 and pathlib.Path(r["dateiname"] or "").suffix.lower() not in CONTAINER_EXT
+                 and r.get("gespeichert")]
     print(f"{len(rows)} Dateien im Kanal-Match '{args.match}'")
 
     binary = ocr_binary()
