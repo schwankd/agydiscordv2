@@ -163,6 +163,11 @@ Lern-Servern mit Material befüllt. Der Code dafür liegt in [`skripte/`](skript
 - **Eine lokale Material-Pipeline** — Text/OCR, Themenbündelung, PDF-Kompression und
   Prüfliste. Details in [`skripte/README-Skripte.md`](skripte/README-Skripte.md), der
   Projektablauf in [`README-Material-Pipeline.md`](README-Material-Pipeline.md).
+- **Einmal-Einladungen** — [`skripte/invites.py`](skripte/invites.py) erzeugt
+  Einladungslinks, die **genau einmal** funktionieren und nach wenigen Tagen verfallen.
+  Verteilt werden sie in der Schule (Klassengruppe/Lehrkraft), nicht öffentlich. So bleibt
+  der Server geschlossen, ohne personenbezogene Daten zu verarbeiten. Details in
+  [`skripte/README-Skripte.md`](skripte/README-Skripte.md).
 
 Was **nicht** im Repository liegt:
 

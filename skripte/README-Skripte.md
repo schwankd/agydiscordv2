@@ -15,6 +15,7 @@ Läuft mit jedem `python3` (getestet mit 3.9.6 und 3.11).
 | `scrape_alt.py` | `AGY_TOKEN_ALT` | **read-only** Material aus den Alt-Servern laden | `eingang/alt-*/…` + `_index_alt.csv` |
 | `post_neu.py` | `AGY_TOKEN_NEU` | Forum-Beiträge aus dem Manifest posten (Titel + Tags + Datei) | `manifest.result.csv` |
 | `selftest.py` | `AGY_TOKEN_NEU` | ein Testbeitrag zum Prüfen der Bot-Rechte, danach gelöscht | — |
+| `invites.py` | `AGY_TOKEN_NEU` | **Einmal-Einladungen** erzeugen/auflisten/widerrufen (Zugang, s. u.) | Ledger `~/.config/agy-discord/invites.json` |
 
 Der Archivar bekommt bewusst nur Lese-Rechte: er kann in den Alt-Servern nichts
 verändern. Es werden ausschließlich GET-Requests und CDN-Downloads gemacht.
@@ -58,6 +59,7 @@ Format des Manifests: siehe `manifest.beispiel.csv` (Spalten
 ## Was NICHT im Repo liegt
 
 - **Tokens** — liegen außerhalb: `~/.config/agy-discord/tokens.env`, `chmod 600`.
+- **Einladungs-Ledger** — `~/.config/agy-discord/invites.json` (enthält Zugangscodes), `chmod 600`.
 - **Server-/Kanal-IDs** — werden zur Laufzeit von `discover.py` gelesen, nie committet.
 - **Material und Metadaten** — Dateien, Indizes, Manifeste, Prüflisten. Siehe `.gitignore`.
 
@@ -142,6 +144,35 @@ für nachfolgende Requests (auch für alte Nachrichten).
 
 `403 Forbidden` auf `POST /channels/<thread>/messages` (nur beim Antworten, Erstellen klappt)
 = **Send Messages in Threads** fehlt. Rolle des Bots im Server anpassen oder neu einladen.
+
+## 5. Zugang: Einmal-Einladungen
+
+Der Server hat **keinen Schülernachweis** — der Schutz ist der Einladungscode selbst.
+`invites.py` erzeugt **Einmal-Links** (`max_uses=1`) mit Ablaufdatum, die in der Schule
+verteilt werden. Ein Link funktioniert genau einmal und verfällt danach: er kann nicht in
+Gruppen weitergegeben und nicht dauerhaft auf Invite-Indexern gefunden werden.
+
+```bash
+python3 invites.py gen --count 30 --label E1     # 30 Codes für die E1, 7 Tage gültig
+python3 invites.py export --label E1             # druckbare Liste zum Verteilen
+python3 invites.py list                          # Ledger + echte Nutzung
+python3 invites.py revoke --label E1 --unused    # Leck eingrenzen (nur ungenutzte)
+```
+
+- Voraussetzung: Bot-Rolle **„Poster"** braucht **Einladung erstellen**
+  (`CREATE_INSTANT_INVITE`) im Zielkanal. Für `list` genügt der öffentliche
+  Invite-Endpunkt — **kein** `MANAGE_GUILD` nötig.
+- **Labels sind Klasse/Kohorte** (`E1`, `GK-Mathe`), **nie Personennamen** — das Ledger
+  ist ohne Personenbezug. Bei einem Leck rotierst du genau diese Kohorte.
+- Ledger außerhalb des Vaults: `~/.config/agy-discord/invites.json` (`chmod 600`).
+- Zusätzlich von Hand: Server-Einstellungen → **Einladungen** → alte/Kanal-Links löschen;
+  Server-**Discovery aus** lassen; Dauer-Links nur bewusst (`--no-expiry`).
+
+> **Grenze (bewusst akzeptiert):** Wer den Code bekommt, ist drin. Der Vertrauensanker ist
+> die Ausgabe (Klassengruppe/Lehrkraft), nicht der Server — ein echter Schülernachweis
+> bräuchte entweder manuelle Freischaltung oder eine Datenquelle (Schul-Mail/LernSax).
+> Weitergabe an eine Fremdperson bleibt möglich und ist nur über die Einmal-Regel
+> abgemildert.
 
 ## Bekannte Grenzen
 
