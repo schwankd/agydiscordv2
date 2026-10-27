@@ -57,12 +57,23 @@ def main() -> int:
     gueltig = foren()
     schon = bekannt()
     ordner = sorted(p for p in NEU.iterdir() if p.is_dir())
+    lose = sorted(p.name for p in NEU.iterdir()
+                  if p.is_file() and not p.name.startswith(".") and p.suffix.lower() != ".md")
+
+    if lose:
+        print(f"\n  !! {len(lose)} Datei(en) liegen DIREKT in neu/ — ohne Fach-Ordner kein Ziel:")
+        for n in lose[:10]:
+            print(f"       {n}")
+        if len(lose) > 10:
+            print(f"       ... und {len(lose) - 10} weitere")
+        print(f"     -> in einen Ordner verschieben, z. B. neu/mathematik-gk/")
+
     if not ordner:
-        print(f"\nNoch nichts abgelegt. Lege Ordner je Ziel-Forum an, z. B.:")
+        print(f"\nNoch nichts ablegbar: lege einen Ordner je Ziel-Forum an, z. B.:")
         print(f"  {NEU.relative_to(PROJECT)}/mathematik-gk/")
         print(f"  {NEU.relative_to(PROJECT)}/geschichte/")
         print(f"\nGültige Ordnernamen: {', '.join(sorted(gueltig))}")
-        return 0
+        return 1 if lose else 0
 
     neue_zeilen, unbekannt = [], []
     for d in ordner:
