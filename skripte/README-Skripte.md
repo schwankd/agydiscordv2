@@ -185,6 +185,8 @@ fertig, du füllst nur **Empfaenger** aus.
 - **Labels sind Klasse/Kohorte** (`E1`, `GK-Mathe`), **nie Personennamen**. Bei einem Leck
   rotierst du genau diese Kohorte.
 - Ledger außerhalb des Vaults: `~/.config/agy-discord/invites.json` (`chmod 600`).
+- Die fertigen Link-Listen liegen in **`~/agy-einladungen/`** (`chmod 700`) — sichtbar im
+  Home, aber lokal: kein Vault, kein Sync, kein Repo. Ein anderer Zielpfad geht mit `--out`.
 - Zusätzlich von Hand: Server-Einstellungen → **Einladungen** → alte/Kanal-Links löschen;
   Server-**Discovery aus** lassen; Dauer-Links nur bewusst (`--no-expiry`).
 

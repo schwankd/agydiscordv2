@@ -37,6 +37,9 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from agy_discord import Client, DiscordError, get_token  # noqa: E402
 
 LEDGER = pathlib.Path.home() / ".config" / "agy-discord" / "invites.json"
+# Verteil-Ordner für die Links: sichtbar im Home, aber LOKAL
+# (kein Vault, kein Sync, kein Git — die Dateien enthalten Zugangsschlüssel).
+AUSGABE = pathlib.Path.home() / "agy-einladungen"
 DEFAULT_CHANNEL = "start-hier"      # Aufsetzpunkt; Sichtbarkeit regelt @everyone
 DEFAULT_DAYS = 7
 
@@ -267,7 +270,10 @@ def cmd_export(args) -> int:
             print("Alle Codes dieser Kohorte sind verbraucht.", file=sys.stderr)
             return 1
     stamp = dt.date.today().isoformat()
-    out = pathlib.Path(args.out or (LEDGER.parent / f"einladungen-{args.label or 'alle'}-{stamp}.csv"))
+    AUSGABE.mkdir(parents=True, exist_ok=True)
+    AUSGABE.chmod(0o700)
+    out = pathlib.Path(args.out) if args.out else (
+        AUSGABE / f"einladungen-{args.label or 'alle'}-{stamp}.csv")
     with out.open("w", newline="", encoding="utf-8-sig") as fh:   # BOM -> Excel/LibreOffice
         w = csv.writer(fh, delimiter=";")
         w.writerow(["Nr", "Kohorte", "Link", "gueltig_bis", "Status",
