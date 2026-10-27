@@ -34,6 +34,13 @@ Warum so: das Archiv-Material kommt über den Index (Server + Kanal aus dem Alt-
 Für selbst abgelegtes Material ist der Kanalname schon das Ziel-Forum, deshalb trägt
 `ziel_of()` es unverändert durch — dieselbe Kette, dieselben Werkzeuge, keine Sonderfälle.
 
+Der Ordnername muss **nicht exakt** stimmen: Tippfehler, Groß/Klein, Umlaute als `oe`,
+`grundkurs`/`leistungskurs` als Wort und Kürzel (`mathe`, `bio`) werden automatisch
+aufgelöst — **Fach und Stufe getrennt**, weil sich `-gk` und `-lk` als Zeichenketten nur um
+einen Buchstaben unterscheiden und ein Ganz-Vergleich jeden Tippfehler für mehrdeutig hielte.
+Ohne Stufenangabe bleibt die Stufe offen und wird **aus dem Inhalt** entschieden (pro Thema im
+`_klass_…json`, sichtbar in der Spalte `notiz` der Vorschau-CSV). Details: `eingang/neu/README.md`.
+
 ## Dateinamen-Konvention
 
 GK/LK-Sortierung läuft **manuell über den Dateinamen**:

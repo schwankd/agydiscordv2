@@ -18,7 +18,9 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import difflib
 import pathlib
+import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -36,6 +38,85 @@ def foren() -> set[str]:
     pfad = PROJECT / "foren-map.resolved.csv"
     return {r["Forum_Kanal"] for r in
             csv.DictReader(pfad.open(newline="", encoding="utf-8"), delimiter=";")}
+
+
+def norm(s: str) -> str:
+    """Ordnernamen vergleichbar machen: Kleinschreibung, Umlaute, Trenner."""
+    s = (s.strip().lower()
+         .replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss"))
+    return re.sub(r"[\s_]+", "-", s)
+
+
+# Stufen-Wörter im Ordnernamen. E-Phase = Grundforum (ohne Suffix), deshalb ohne Endung.
+STUFE_GK = {"gk", "grundkurs"}
+STUFE_LK = {"lk", "leistungskurs"}
+STUFE_E = {"e", "ephase", "einfuehrungsphase", "ephase11"}
+STUFE_KURS = {"kurs", "kursphase"}      # Kursphase, aber GK/LK nicht gesagt
+
+
+def resolve(name: str, gueltig: set[str]) -> tuple[str, str, bool]:
+    """Ordnername -> (Kanal für den Index, Klartext, eindeutig?).
+
+    Fach und Stufe werden GETRENNT aufgelöst — nicht der ganze Name auf einmal:
+    `-gk` und `-lk` unterscheiden sich nur um einen Buchstaben, ein Vergleich
+    ganzer Namen hielte jeden Tippfehler für mehrdeutig. So bleiben die Fächer
+    weit auseinander (`mathematik` vs `geographie`) und die Stufe ist ein eigenes
+    Wort (`gk`, `lk`, `grundkurs`, `leistungskurs`, `e`, `ephase`).
+
+    Ohne Stufenwort bleibt die Stufe offen — sie entscheidet der Inhalt.
+    Kein Treffer: Name bleibt stehen, nichts wird verworfen.
+    """
+    n = norm(name)
+    tabelle = {norm(f): f for f in gueltig}
+    if n in tabelle:
+        return tabelle[n], "genau", True
+
+    teile = [t for t in n.split("-") if t]
+    stufe = ""
+    rest = []
+    for t in teile:
+        if t in STUFE_GK:
+            stufe = "gk"
+        elif t in STUFE_LK:
+            stufe = "lk"
+        elif t in STUFE_E:
+            stufe = ""
+        elif t in STUFE_KURS:
+            stufe = "kurs"
+        else:
+            rest.append(t)
+    rest = "-".join(rest)
+    if not rest:
+        return name, "kein Fach erkannt — ich ordne beim Einsortieren zu", False
+
+    faecher = sorted({f.split("-")[0] for f in gueltig})
+    ftab = {norm(f): f for f in faecher}
+    if rest in ftab:
+        fach = ftab[rest]
+    else:
+        nah = difflib.get_close_matches(rest, list(ftab), n=1, cutoff=0.7)
+        if nah:
+            fach = ftab[nah[0]]
+        else:
+            stamm = [f for f in faecher if len(rest) >= 3 and f.startswith(rest)]
+            if len(stamm) != 1:
+                return name, "kein Forum-Treffer — ich ordne beim Einsortieren zu", False
+            fach = stamm[0]
+
+    if stufe == "kurs":
+        # Kursphase ohne GK/LK-Angabe: GK als Vorgabe (größere Gruppe; LK-Material
+        # ist fast immer als LK beschriftet). Fachlich falsch ist es nicht — ich
+        # verschiebe es, wenn der Inhalt LK sagt, und schreibe das in die Notiz.
+        for k in ("gk", "lk"):
+            if f"{fach}-{k}" in gueltig:
+                return f"{fach}-{k}", f"Kursphase ohne GK/LK -> {k.upper()} (aus '{name}')", True
+        return fach, f"Kursphase, aber {fach} hat kein Kursforum — Stufe entscheidet der Inhalt", True
+    if not stufe:
+        return fach, f"Fach {fach}, Stufe entscheidet der Inhalt (aus '{name}')", True
+    ziel = f"{fach}-{stufe}"
+    if ziel not in gueltig:
+        return fach, f"{fach} hat kein {stufe.upper()} — Stufe entscheidet der Inhalt", True
+    return ziel, f"erkannt: {fach} {stufe.upper()}" + (f" (aus '{name}')" if name != ziel else ""), True
 
 
 def bekannt() -> set[str]:
@@ -75,11 +156,11 @@ def main() -> int:
         print(f"\nGültige Ordnernamen: {', '.join(sorted(gueltig))}")
         return 1 if lose else 0
 
-    neue_zeilen, unbekannt = [], []
+    neue_zeilen, unklar = [], []
     for d in ordner:
-        if d.name not in gueltig:
-            unbekannt.append(d.name)
-            continue
+        kanal, hinweis, eindeutig = resolve(d.name, gueltig)
+        if not eindeutig:
+            unklar.append(d.name)
         dateien = sorted(p for p in d.rglob("*") if p.is_file()
                          and not p.name.startswith(".")
                          and p.suffix.lower() not in CONTAINER_EXT)
@@ -87,27 +168,30 @@ def main() -> int:
             if str(p) in schon:
                 continue
             neue_zeilen.append({
-                "server": SERVER, "kanal": d.name, "thread": "", "nachricht_id": "",
+                "server": SERVER, "kanal": kanal, "thread": "", "nachricht_id": "",
                 "zeit": dt.datetime.fromtimestamp(p.stat().st_mtime).isoformat(timespec="seconds"),
                 "autor": "", "dateiname": p.name, "bytes": p.stat().st_size,
                 "gespeichert": str(p), "text": "", "embed_urls": "", "fehler": "",
             })
         if dateien:
-            print(f"  {d.name:<18} {len(dateien):>3} Datei(en)  "
-                  f"({sum(p.stat().st_size for p in dateien) / 1e6:.1f} MB)")
+            marke = "  " if eindeutig else "!!"
+            print(f"  {marke} {d.name:<20} -> {kanal:<16} {len(dateien):>3} Datei(en)  {hinweis}")
+        elif d.name not in gueltig:
+            print(f"  !! {d.name:<20} leer und kein Forum-Name")
 
-    for name in unbekannt:
-        print(f"  !! unbekannter Ordner: '{name}' — nicht in foren-map.resolved.csv")
+    if unklar:
+        print(f"\n  {len(unklar)} Ordner ohne eindeutiges Forum: "
+              f"{', '.join(unklar)} -> ich entscheide die Stufe aus dem Inhalt")
 
     if not neue_zeilen:
         print("\nNichts Neues zu indexieren.")
-        return 0 if not unbekannt else 1
+        return 0
 
     print(f"\n{len(neue_zeilen)} neue Datei(en)" + (" [ZEIGEN]" if args.zeigen else ""))
     if args.zeigen:
         for r in neue_zeilen:
             print(f"   {r['kanal']:<18} {r['dateiname']}")
-        return 0
+        return 1 if unklar else 0
 
     neu = not INDEX.exists()
     with INDEX.open("a", newline="", encoding="utf-8") as fh:
@@ -117,7 +201,9 @@ def main() -> int:
         w.writerows(neue_zeilen)
     print(f"-> {INDEX.relative_to(PROJECT)}")
     print(f"\nWeiter mit:  python3 extract_text.py --match <forum>")
-    return 0 if not unbekannt else 1
+    # Nicht eindeutige Ordner sind kein Fehler, aber sichtbar: Rückgabewert 1,
+    # damit ein Skript/eine Kette nicht stillschweigend darüber hinwegläuft.
+    return 1 if unklar else 0
 
 
 if __name__ == "__main__":
