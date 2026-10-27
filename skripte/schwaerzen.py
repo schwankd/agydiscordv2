@@ -11,10 +11,15 @@ Warum nicht einfach ein schwarzes Rechteck über den Text:
 Vorgehen je Seite (ein Durchgang):
   1. Seite bei 200 dpi rastern.
   2. OCR MIT Positionen (Apple Vision, ocr-vision-boxes.swift).
-  3. Kopfdaten-Block bestimmen: die oberen Zeilen, die Name/Datum/Punkte/Zensur/
-     Klasse/Kurs/Test/Klausur/BE/NP enthalten — samt allem darüber.
-  4. Diesen Block über die VOLLE Breite schwärzen (der Name steht rechts vom
-     Label und wird von der OCR oft nicht gelesen).
+  3. Kopfzone bestimmen (siehe kopfzone): bevorzugt alles OBERHALB der ersten
+     Aufgabenzeile über die volle Breite. Grund: der Name steht oft rechts vom
+     Label UND zusätzlich oben rechts ohne Label — ein Band, das nur das
+     beschriftete Feld trifft, lässt ihn stehen. Die erste Aufgabenzeile ist die
+     Grenze, die das Papier selbst zieht; darüber ist Kopfbereich.
+     Findet die OCR keine Aufgabenzeile, greift das Kopfdatenfeld, sonst die
+     obere rechte Ecke (kleinster möglicher Eingriff).
+  4. Für jede Seite wird ausgegeben, WELCHER Text unter das Band fällt — damit
+     die Schwärzung nachprüfbar ist und nicht stillschweigend Inhalt verschwindet.
   5. Seite aus dem geschwärzten Bild neu aufbauen.
 
 Aufruf:
@@ -40,10 +45,26 @@ QUELLE_SWIFT = (pathlib.Path.home() / ".hermes/skills/note-taking/schul-archiv-o
                 / "scripts/ocr-vision-boxes.swift")
 DPI = 200
 BAND_MAX = 0.40          # höchstens die oberen 40 % werden geschwärzt
+ECKE_X, ECKE_H = 0.45, 0.16   # Fallback ohne Erkennung: obere rechte Ecke
 FELDER = re.compile(
     r"\b(name|vorname|datum|punkte|zensur|note|klasse|kurs|kursart|fach|test|"
-    r"klausur|klassenarbeit|kursarbeit|lernkontrolle|be|np|jahrgang|schuljahr|"
+    r"klausur|klassenarbeit|kursarbeit|lernkontrolle|np|jahrgang|schuljahr|"
     r"bewertung|erreicht)\b", re.IGNORECASE)
+# „BE" steht bewusst NICHT in FELDER: „Erreichbare BE-Anzahl: 10" steht auf JEDER
+# Klausur unter jeder Aufgabe. Als Feldwort hat es das Schwärzband über die erste
+# Aufgabenzeile hinausgezogen und Aufgabentext verschluckt (im Testfall belegt).
+# Personenbezogene Felder — auch unterhalb der ersten Aufgabenzeile prüfenswert.
+NAMENAH = re.compile(r"\b(name|vorname|klasse|kurs|kursart|zensur|note|datum|"
+                     r"bewertung|erreicht)\b", re.IGNORECASE)
+# Zeilen, in denen eine Aufgabe beginnt: "1.", "a)", "Aufgabe 2", "Teil B"
+AUFGABE = re.compile(r"^\s*(?:\d{1,2}\s*[.)]\s|[a-e]\s*[.)]\s|Aufgabe\b|Teil\s+[AB]\b)",
+                     re.IGNORECASE)
+# Aufgabenverben — zusammen mit Länge ein guter Hinweis auf Aufgabentext
+TUN_WORT = re.compile(
+    r"\b(berechne|bestimme|gib|erläutere|erkläre|begründe|beschreibe|zeige|ermittle|"
+    r"skizziere|nenne|ordne|vervollständige|löse|zeichne|ergänze|benenne|vergleiche|"
+    r"diskutiere|analysiere|interpretiere|beschrifte|notiere|untersuche|entscheide|"
+    r"trage|stelle|fasse|weise|beantworte|formuliere)\w*\b", re.IGNORECASE)
 
 
 def ocr_binary() -> pathlib.Path:
@@ -93,6 +114,100 @@ def kopfband(zeilen: list[tuple[float, float, float, float, str]]) -> tuple[floa
             break
         unten, _ = max(unten, yh), felder.append(t)
     return min(unten, BAND_MAX), felder[:6]
+
+
+def aufgabe_oben(zeilen: list[tuple[float, float, float, float, str]]) -> float:
+    """Oberkante der ersten AUFGABENZEILE (normalisiert) oder 0.
+
+    Der Name steht nicht nur im beschrifteten Feld: auf mehreren Tests stand er
+    oben rechts OHNE Label (nachgewiesen im Kontaktbogen). Ein Band, das nur das
+    Feld trifft, lässt ihn stehen. Zuverlässiger ist die Grenze, die das Papier
+    selbst zieht: die erste Zeile, in der eine Aufgabe beginnt. Alles darüber ist
+    Kopfbereich (Name, Datum, Punkte, Titel) — und wird geschwärzt.
+    """
+    for _x, y, _w, _h, t in sorted(zeilen, key=lambda z: z[1]):
+        if y > BAND_MAX:
+            break
+        sauber = t.strip()
+        if FELDER.search(sauber) and not AUFGABE.search(sauber):
+            continue                                  # Kopfzeile, keine Aufgabe
+        if AUFGABE.search(sauber) or (TUN_WORT.search(sauber) and len(sauber) > 25):
+            return y
+    return 0.0
+
+
+def ecke_rechteck(zeilen: list[tuple[float, float, float, float, str]]
+                  ) -> tuple[float, float, float, float]:
+    """Obere rechte Ecke, aber höchstens bis zur ersten erkannten Textzeile darin.
+
+    Ein Band über die Ecke kann eine gedruckte Zeile anschneiden (im Testfall
+    passiert: der erste Satz des Quellenmaterials lag halb in der Ecke). Deshalb
+    endet es über der ersten Zeile, deren Mitte in der Ecke liegt — geschwärzt
+    wird dann nur der Rand darüber, wo ein handschriftlicher Name steht.
+    """
+    drin = [y for x, y, w, h, _t in zeilen
+            if x + w / 2 > ECKE_X and y + h / 2 < ECKE_H]
+    hoehe = max(0.06, min(ECKE_H, min(drin) if drin else ECKE_H))
+    return (ECKE_X, 0.0, 1.0, hoehe)
+
+
+def kopfzone(zeilen: list[tuple[float, float, float, float, str]]
+             ) -> tuple[list[tuple[float, float, float, float]], str, list[str]]:
+    """Was geschwärzt wird: Rechtecke (x0,y0,x1,y1 normalisiert) + Begründung.
+
+    Drei Fälle, absteigend nach Verlässlichkeit:
+      1. Aufgabenzeile gefunden → ganzer Kopfbereich bis dorthin, volle Breite.
+         Das ist die Regel, die auch den namenlosen Eintrag oben rechts erwischt.
+      2. Nur Kopfdatenfeld gefunden → Feldblock plus eine Zeile Luft, volle Breite.
+      3. Nichts erkannt → obere rechte Ecke. Dort sitzt der Name ohne Label, und
+         anders als ein Band über die ganze Breite kostet das auf Notizseiten
+         praktisch keinen Inhalt (die Ecke ist fast immer leer oder Datum).
+    """
+    felder_unten, felder = kopfband(zeilen)
+    aufg = aufgabe_oben(zeilen)
+    if aufg > 0:
+        # Über der ersten Aufgabenzeile enden — aber nur, wenn dort auch
+        # KOPFBEREICH steht. Steht dort Fließtext (Quellenmaterial M 1/M 2, das in
+        # Prüfungen oft VOR den Aufgaben abgedruckt ist), wäre ein Band bis zur
+        # ersten Aufgabenzeile Inhaltsverlust. Kennzeichen Kopfbereich: wenige,
+        # kurze Zeilen. Kennzeichen Material: viele Zeilen oder lange Zeilen.
+        oben = [t.strip() for _x, y, _w, _h, t in zeilen if y < aufg]
+        kopfartig = len(oben) <= 5 and all(len(t) < 45 for t in oben)
+        warnung = ""
+        drunter = [(y, t) for _x, y, _w, _h, t in zeilen
+                   if aufg < y < BAND_MAX and NAMENAH.search(t)]
+        if drunter:
+            warnung = ("  !! GRENZFALL: personenbezogenes Feld unterhalb der ersten "
+                       f"Aufgabenzeile: {drunter[0][1][:40]!r} (bei {drunter[0][0]:.1%})")
+        if kopfartig:
+            return [(0.0, 0.0, 1.0, aufg)], \
+                f"Kopfbereich bis über die erste Aufgabenzeile ({aufg:.1%}){warnung}", felder
+        # Material über den Aufgaben: nur den Feldblock bzw. die Ecke schwärzen,
+        # damit der Quellentext erhalten bleibt.
+        ecke = ecke_rechteck(zeilen)
+        if felder_unten > 0:
+            unten = min(felder_unten + 0.03, BAND_MAX)
+            return ([(0.0, 0.0, 1.0, unten)] + ([ecke] if unten < ecke[3] else [])), \
+                (f"Material über den Aufgaben → nur Feldblock ({unten:.1%}){warnung}"), felder
+        return [ecke], \
+            (f"Material über den Aufgaben → nur obere rechte Ecke "
+             f"({ecke[3]:.0%}){warnung}"), felder
+    if felder_unten > 0:
+        unten = min(felder_unten + 0.03, BAND_MAX)
+        return [(0.0, 0.0, 1.0, unten)], f"Kopfdatenfeld + Zeilenabstand ({unten:.1%})", felder
+    ecke = ecke_rechteck(zeilen)
+    return [ecke], f"kein Feld/Aufgabe → obere rechte Ecke ({ecke[3]:.0%})", []
+
+
+def gedeckt(zeilen: list[tuple[float, float, float, float, str]],
+            rechtecke: list[tuple[float, float, float, float]]) -> list[str]:
+    """Welcher erkannte Text fällt unter die Schwärzung? Zum Nachprüfen."""
+    aus = []
+    for x, y, w, h, t in zeilen:
+        mx, my = x + w / 2, y + h / 2
+        if any(x0 <= mx <= x1 and y0 <= my <= y1 for x0, y0, x1, y1 in rechtecke):
+            aus.append(t.strip())
+    return aus
 
 
 def kopfblaetter(quelle: pathlib.Path, ordner: pathlib.Path, hoehe: float = 0.25,
@@ -190,17 +305,19 @@ def main() -> int:
             with tempfile.NamedTemporaryFile(suffix=".png", dir=CACHE, delete=False) as fh:
                 tmp = pathlib.Path(fh.name)
             bild.save(tmp, "PNG")
-            unten, erkannt = kopfband(ocr_zeilen(binary, tmp))
+            zeilen_ocr = ocr_zeilen(binary, tmp)
+            rechtecke, grund, erkannt = kopfzone(zeilen_ocr)
+            unter_dem_band = gedeckt(zeilen_ocr, rechtecke)
             tmp.unlink(missing_ok=True)
             vorher = bild.copy()          # VOR dem Schwärzen sichern, sonst sind
-            if unten > 0:                 # beide Bögen identisch (im Test aufgefallen)
-                ImageDraw.Draw(bild).rectangle([0, 0, bild.width, int(unten * bild.height)],
-                                               fill=(0, 0, 0))
-                geschwaerzt += 1
-                print(f"  Seite {i + 1:>3}: Band bis {unten:>5.1%} geschwärzt — "
-                      f"erkannt: {' | '.join(erkannt[:4])}")
-            else:
-                print(f"  Seite {i + 1:>3}: kein Kopfdatenfeld erkannt")
+            stift = ImageDraw.Draw(bild)  # beide Bögen identisch (im Test aufgefallen)
+            for x0, y0, x1, y1 in rechtecke:
+                stift.rectangle([x0 * bild.width, y0 * bild.height,
+                                 x1 * bild.width, y1 * bild.height], fill=(0, 0, 0))
+            geschwaerzt += 1
+            print(f"  Seite {i + 1:>3}: {grund}"
+                  + (f" — darunter: {' | '.join(t[:26] for t in unter_dem_band[:3])}"
+                     if unter_dem_band else " — darunter kein erkannter Text"))
             vor_tiles.append(vorher)
             nach_tiles.append(bild.copy())
 

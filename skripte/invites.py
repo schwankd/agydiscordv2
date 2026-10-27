@@ -116,7 +116,7 @@ def expires_epoch(m: dict) -> float | None:
 def status_from_meta(m: dict, row: dict) -> tuple[int, bool, str]:
     if not m:
         return row.get("uses", 0) or 0, True, "gelöscht/ungültig"
-    uses = m.get("uses", 0)
+    uses = m.get("uses") or 0          # direkt nach dem Anlegen kann der Wert null sein
     exp = expires_epoch(m)
     if m.get("max_uses") and uses >= m["max_uses"]:
         state = "verbraucht"
