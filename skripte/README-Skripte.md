@@ -205,3 +205,7 @@ fertig, du füllst nur **Empfaenger** aus.
   `~/.hermes/skills/note-taking/schul-archiv-ocr-pdf/scripts/ocr-vision-swift.swift`
   erwartet (Apple Vision, macOS). Ohne diese Datei läuft `extract_text.py` nur für
   PDFs mit Textebene.
+
+| `leerseiten.py` | Leere Seiten entfernen — nur nach Doppelprüfung, mit Pixel-Nachweis aller übrigen Seiten |
+| `schwaerzen.py` | Kopfdaten (Name/Datum/Punkte) auf Tests schwärzen; Seiten werden als Bild neu gebaut |
+| `ocr-vision-boxes.swift` | Apple-Vision-OCR **mit Positionen** (normalisierte Kästen) — Grundlage fürs Schwärzen |
