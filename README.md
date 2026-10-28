@@ -198,6 +198,6 @@ Was **nicht** im Repository liegt:
 - **Kein Material und keine Metadaten** — keine Dateien der Lernenden, keine Dateilisten,
   keine Manifeste. Siehe [`.gitignore`](.gitignore).
 
-Die Bots unterliegen `§4 Urheberrecht` wie jeder andere Beitrag: Der Materialbestand aus
+Die Bots unterliegen `§6 Urheberrecht` wie jeder andere Beitrag: Der Materialbestand aus
 den Alt-Servern stammt aus einem alten Lern-Server und wurde beim Einpflegen markiert
 (Klausurfotos, Lehrpläne, Verlagsseiten) und in einer Prüfliste zusammengefasst.
