@@ -19,7 +19,7 @@ Wir setzen auf ein System der **reaktiven Moderation**. Es gibt keine manuellen 
 | **@Schülerrat** | Blau (Sichtbar) | Offizielle Ansprechpersonen der Schülerschaft. |
 | **@Jahrgang 12 / 11 / E-Phase** | Farblich getrennt | Dienen der Gruppierung in der rechten Mitgliederliste. |
 | **@LK / @GK / @Klasse** | Unsichtbar im Menü | Dienen als Profil-Tags zur leichteren Erkennung im Chat. |
-| **@Ehemalige** | Standard | Für Ehemalige des AGY Dresden. Vergibt **nicht** die Rolle @Lernende — der Lernbereich bleibt damit zu (Stand 28.10.2026). |
+| **@Ehemalige** | Standard | Für Ehemalige des AGY Dresden. Erhält über das Onboarding zusätzlich @Lernende und damit vollen Zugang zum Lernbereich. |
 | **@Lernende** | Standard | Basis-Rolle, die jeder nach dem Onboarding erhält. Darf überall schreiben und Forenposts erstellen. |
 | **@everyone** | Keine | Sieht nur den öffentlichen Teil (Regeln, Start, Infos, Community) und darf nur in `#allgemein` schreiben. Der Lernbereich ist @everyone entzogen. |
 
@@ -67,7 +67,7 @@ Dieses Menü wird über die Discord-Einstellungen ("Community-Onboarding") konfi
    - E-Phase (Einführungsphase) ➔ *Vergibt Rollen: @Lernende, @E-Phase*
    - Jahrgang 11 (Kursphase) ➔ *Vergibt Rollen: @Lernende, @Jahrgang 11*
    - Jahrgang 12 (Kursphase) ➔ *Vergibt Rollen: @Lernende, @Jahrgang 12*
-   - Ehemalige ➔ *Vergibt Rolle: @Ehemalige* (ohne @Lernende, also ohne Lernbereich)
+   - Ehemalige ➔ *Vergibt Rollen: @Lernende, @Ehemalige* (voller Zugang)
 2. **Welche Stammklasse besuchst du?** *(Pflichtfrage, 1 Antwort)*
    - E1 / E2 ➔ *Vergibt die jeweilige Klassen-Rolle.*
    - „🎓 Ich bin in Jahrgang 11 oder 12" ➔ *Vergibt keine Rolle (beendet die Frage).*
@@ -106,7 +106,7 @@ Die verbindliche Fassung steht in **[`regeln.md`](regeln.md)** — acht Paragraf
 
 ## 📝 5. Blaupause für den `#start-hier` Kanal
 
-*Dieser Text wird als feste, angepinnte Nachricht im Info-Kanal platziert:*
+*Dieser Text wird als feste, angepinnte Nachricht im Info-Kanal platziert (Stand 28.10.2026 — die Live-Nachricht wurde auf die Material-Tags und den `#regeln`-Verweis korrigiert):*
 
 > # :wave: Willkommen auf dem inoffiziellen AGY Discord!
 > Von Lernenden für Lernende. Unser Ziel: Gemeinsam durchs Abi! Tauscht euch aus, klärt Fragen und sammelt Lernzettel zentral an einem Ort.
@@ -114,17 +114,18 @@ Die verbindliche Fassung steht in **[`regeln.md`](regeln.md)** — acht Paragraf
 > ## :compass: Server-Wegweiser
 > * **#allgemein:** Für Austausch, Smalltalk & Fragen. Bei Anliegen direkt den `@Schülerrat` markieren.
 > * **#bafög-und-soziales:** Tipps zur Finanzierung (von Lernenden gesammelt, ohne Gewähr).
+> * **#regeln:** Die Server-Regeln — bitte einmal lesen. Kurz: keine Klarnamen, Uploads anonymisieren, Auffälliges melden.
 > * **:books: Lernbereich:** Jedes Fach hat ein eigenes **Forum** (Achtung: kein Text-Chat!).
 >
 > ## :bulb: Wie funktionieren die Lern-Foren?
 > Foren sind wie ein digitales schwarzes Brett für eure Dokumente.
-> * **Material finden:** Gehe in das Forum deines Kurses (z. B. `#mathematik-gk`) und filtere mit dem Tag-Symbol nach Materialart (z. B. `Zusammenfassung`).
+> * **Material finden:** Gehe in das Forum deines Kurses — die Stufe steckt im Kanalnamen (z. B. `#mathematik-gk`) — und filtere oben mit dem Tag-Symbol nach Materialart.
 > * **Hochladen:** Klicke auf "Neuer Beitrag" und wähle einen klaren Titel, der genau sagt, worum es geht (z. B. "Kurvendiskussion – Grundlagen"). Pro Thema ein Beitrag; Ergänzungen zu einem bestehenden Thema lädst du als Antwort im gleichen Post hoch.
 > * **:label: Tags sind Pflicht:** Wähle vor dem Posten zwingend einen Material-Tag aus (`Zusammenfassung`, `Klausur/Test`, `Hausaufgabe`, `Sonstiges`). Ohne Tags entsteht Chaos!
 > * **Fragen stellen:** Schreibe Fragen zu Lernzetteln direkt als Antwort in den jeweiligen Beitrag.
 >
 > ## :busts_in_silhouette: Eure Ansprechpersonen
-> * **@Admin & @Moderator :** Hilfe bei technischen Problemen oder Regelverstößen.
+> * **@Admin & @Moderator:** Hilfe bei technischen Problemen oder Regelverstößen.
 > * **@Schülerrat:** Eure offizielle Vertretung bei schulischen Anliegen.
 >
 > ## :link: Wichtige Links
