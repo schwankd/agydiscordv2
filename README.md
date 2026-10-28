@@ -19,8 +19,11 @@ Wir setzen auf ein System der **reaktiven Moderation**. Es gibt keine manuellen 
 | **@Schülerrat** | Blau (Sichtbar) | Offizielle Ansprechpersonen der Schülerschaft. |
 | **@Jahrgang 12 / 11 / E-Phase** | Farblich getrennt | Dienen der Gruppierung in der rechten Mitgliederliste. |
 | **@LK / @GK / @Klasse** | Unsichtbar im Menü | Dienen als Profil-Tags zur leichteren Erkennung im Chat. |
-| **@Lernende** | Standard | Basis-Rolle, die jeder automatisch nach dem Onboarding erhält. Darf überall schreiben und Forenposts erstellen. |
-| **@everyone** | Keine | Sieht nur das Onboarding und die Regeln (Bot-Schutz). |
+| **@Ehemalige** | Standard | Für Ehemalige des AGY Dresden. Vergibt **nicht** die Rolle @Lernende — der Lernbereich bleibt damit zu (Stand 28.10.2026). |
+| **@Lernende** | Standard | Basis-Rolle, die jeder nach dem Onboarding erhält. Darf überall schreiben und Forenposts erstellen. |
+| **@everyone** | Keine | Sieht nur den öffentlichen Teil (Regeln, Start, Infos, Community) und darf nur in `#allgemein` schreiben. Der Lernbereich ist @everyone entzogen. |
+
+Technische Rollen ohne Mitglieder-Funktion: **@BOT** und **@Poster** (Material-Bot, legt Forum-Beiträge an).
 
 ---
 
@@ -34,10 +37,12 @@ Der Server wird in vier übersichtliche Kategorien unterteilt.
 - `#regeln` – Die verbindlichen Server-Regeln (zum Nachlesen) — Fassung im Repo: [`regeln.md`](regeln.md).
 - `#ankündigungen` – Wichtige Meldungen von Moderation oder Schülerrat.
 - `#bafög-und-soziales` – Tipps und Links mit festem Disclaimer im Kanalthema: *"Infos von Lernenden für Lernende. Keine Gewähr. Bitte bei offiziellen Stellen prüfen."*
+- `#informationen` – Krankmeldung/Freistellung (Weg, Adresse, benötigte Angaben) und Grundlagen-Dokumente (Operatoren, Methodensammlung Lernen lernen, wissenschaftliches Arbeiten).
 
 ### 💬 AUSTAUSCH & COMMUNITY
 *(Schreibzugriff für alle @Lernende)*
 - `#allgemein` – Der Hauptchat für den täglichen Austausch, Fragen, Smalltalk und schnelle Anliegen an den `@Schülerrat`.
+- `✨Lernen und Quatschen✨` / `✨Lernen und Quatschen 2✨` – zwei Sprachkanäle für gemeinsames Lernen.
 
 ### 📚 LERNBEREICH
 *(Foren-Kanäle — pro Fach UND Kurs getrennt)*
@@ -50,6 +55,7 @@ Der Server wird in vier übersichtliche Kategorien unterteilt.
 *(Unsichtbar für normale Lernende)*
 - `#mod-admin-intern` – Für technische und moderative Abstimmungen.
 - `#schülerrat-intern` – Geschützter Raum für die schulpolitische Arbeit des Schülerrats.
+- `#discord-news-intern` – Interne Absprachen und Neuigkeiten rund um den Server.
 
 ---
 
@@ -58,27 +64,43 @@ Der Server wird in vier übersichtliche Kategorien unterteilt.
 Dieses Menü wird über die Discord-Einstellungen ("Community-Onboarding") konfiguriert. Es weist neuen Lernenden beim Betreten des Servers vollautomatisch die richtigen Rollen zu.
 
 1. **In welcher Phase befindest du dich?** *(Pflichtfrage, 1 Antwort)*
-   - E-Phase (Einführungsphase) ➔ *Vergibt Rolle: @E-Phase*
-   - Jahrgang 11 (Kursphase) ➔ *Vergibt Rolle: @Jahrgang 11*
-   - Jahrgang 12 (Kursphase) ➔ *Vergibt Rolle: @Jahrgang 12*
+   - E-Phase (Einführungsphase) ➔ *Vergibt Rollen: @Lernende, @E-Phase*
+   - Jahrgang 11 (Kursphase) ➔ *Vergibt Rollen: @Lernende, @Jahrgang 11*
+   - Jahrgang 12 (Kursphase) ➔ *Vergibt Rollen: @Lernende, @Jahrgang 12*
+   - Ehemalige ➔ *Vergibt Rolle: @Ehemalige* (ohne @Lernende, also ohne Lernbereich)
 2. **Welche Stammklasse besuchst du?** *(Pflichtfrage, 1 Antwort)*
-   - Auswahlmöglichkeiten der Klassen (z. B. E1, E2...). ➔ *Vergibt entsprechende Klassen-Rollen.*
-3. **Welche Leistungskurse (LK) belegst du?** *(Optional für E-Phase, Mehrfachauswahl)*
-   - Auswahl aller LKs (Deutsch, Mathe, etc.). ➔ *Vergibt LK-Rollen.*
-4. **Welche Grundkurse (GK) belegst du?** *(Optional für E-Phase, Mehrfachauswahl)*
-   - Auswahl aller GKs. ➔ *Vergibt GK-Rollen.*
+   - E1 / E2 ➔ *Vergibt die jeweilige Klassen-Rolle.*
+   - „🎓 Ich bin in Jahrgang 11 oder 12" ➔ *Vergibt keine Rolle (beendet die Frage).*
+3. **Welche Leistungskurse (LK) belegst du?** *(Pflichtfrage, Mehrfachauswahl — jedes Fach ist auch abwählbar)*
+   - Deutsch/Mathematik/Englisch/Geschichte LK ➔ *Vergibt die LK-Rolle.*
+   - „Ich bin in der E-Phase" ➔ *Vergibt keine Rolle.*
+4. **Welche Grundkurse (GK) belegst du?** *(Pflichtfrage, Mehrfachauswahl)*
+   - 11 GKs (Deutsch, Mathe, Englisch, Geschichte, Physik, Biologie, Chemie, Ethik, GRW, Geographie, Französisch) ➔ *Vergibt die GK-Rolle.*
+   - „Ich bin in der E-Phase" ➔ *Vergibt keine Rolle.*
+5. **Besuchst du den DAZ-Unterricht?** *(optional, 1 Antwort)*
+   - Ja / Nein ➔ *Vergibt keine Rolle.*
 
 ---
 
 ## ⚖️ 4. Das Regelwerk (Regel-Überprüfung / Rule Screening)
 
-Bevor Lernende den Server betreten können, müssen sie in einem Pop-up diesen Regeln per Checkbox zustimmen:
+Bevor Lernende den Server betreten können, müssen sie in einem Pop-up diesen Regeln per Checkbox zustimmen.
 
-- **§1 Inoffizieller Server & Haftungsausschluss:** Dieser Server wird privat verwaltet und ist kein offizielles Angebot des AGY Dresden. Alle Infos (auch zu BAföG und Sozialleistungen) sind von Lernenden gesammelt und ohne Gewähr.
-- **§2 Respektvolles Miteinander:** Wir begegnen uns auf Augenhöhe. Diskriminierung, Rassismus, Sexismus, Mobbing oder toxisches Verhalten führen zum sofortigen Ausschluss.
-- **§3 Datenschutz:** Es besteht keine Klarnamen-Pflicht. Das Teilen von privaten Daten (Adressen, Nummern, private Profile) von Mitlernenden oder Lehrkräften ist strengstens verboten.
-- **§4 Urheberrecht:** Das Teilen von offiziellen, benoteten Klassenarbeiten (inkl. Korrekturen der Lehrkräfte) und geschützten Buchseiten ist untersagt. Erlaubt und erwünscht sind: Eigene Zusammenfassungen, Mitschriften, selbst erstellte Lernzettel und Gedächtnisprotokolle.
-- **§5 Struktur bewahren:** Bitte nutzt für Lerninhalte das Forum eures Kurses (Fach + E-Phase/GK/LK) und markiert jeden Beitrag mit dem passenden Material-Tag (Zusammenfassung, Klausur/Test, Hausaufgabe, Sonstiges), damit alle Lernenden schnell finden, was sie suchen.
+Die verbindliche Fassung steht in **[`regeln.md`](regeln.md)** — acht Paragrafen, wortgleich mit dem, was im Kanal `#regeln` veröffentlicht ist:
+
+| | |
+| :--- | :--- |
+| §1 | Inoffizieller Server & Haftungsausschluss |
+| §2 | Zugang — nur für AGY (Codes persönlich, Klarname nie nötig) |
+| §3 | Respektvolles Miteinander |
+| §4 | Datenschutz & Anonymisierung (Uploads müssen geschwärzt sein) |
+| §5 | Meldepflicht (nicht anonymisiertes Dokument melden, nicht teilen) |
+| §6 | Urheberrecht (keine benoteten Klassenarbeiten) |
+| §7 | Struktur bewahren (Foren + Pflicht-Tags) |
+| §8 | Konsequenzen (gestufte Folgen) |
+
+> **Keine zweite Textquelle:** Regeländerung heißt `regeln.md` anpassen und
+> `python3 skripte/post_regeln.py` laufen lassen — der Kanaltext wird daraus erzeugt.
 
 ---
 
