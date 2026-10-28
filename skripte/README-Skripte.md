@@ -16,6 +16,12 @@ Läuft mit jedem `python3` (getestet mit 3.9.6 und 3.11).
 | `post_neu.py` | `AGY_TOKEN_NEU` | Forum-Beiträge aus dem Manifest posten (Titel + Tags + Datei) | `manifest.result.csv` |
 | `selftest.py` | `AGY_TOKEN_NEU` | ein Testbeitrag zum Prüfen der Bot-Rechte, danach gelöscht | — |
 | `invites.py` | `AGY_TOKEN_NEU` | **Einmal-Einladungen** erzeugen/auflisten/widerrufen (Zugang, s. u.) | Ledger `~/.config/agy-discord/invites.json` |
+| `post_regeln.py` | `AGY_TOKEN_NEU` | Server-Regeln aus `../regeln.md` in `#regeln` posten (Text wird an Paragrafgrenzen in Nachrichten ≤ 2000 Zeichen geteilt); `--dry-run` zeigt die Nachrichten | — |
+
+> `post_regeln.py` liest `regeln.md` (Repo-Wurzel) als **einzige Quelle** — Regeländerung
+> heißt: Markdown anpassen, Skript laufen lassen. Server und Kanäle werden zur Laufzeit
+> aufgelöst. In `#regeln` verweigert @everyone das Schreiben: die Bot-Rolle braucht dort
+> einmalig „Nachrichten senden".
 
 Der Archivar bekommt bewusst nur Lese-Rechte: er kann in den Alt-Servern nichts
 verändern. Es werden ausschließlich GET-Requests und CDN-Downloads gemacht.
