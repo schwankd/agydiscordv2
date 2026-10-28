@@ -31,7 +31,7 @@ Der Server wird in vier übersichtliche Kategorien unterteilt.
 ### 📌 WILLKOMMEN & INFOS
 *(Lesezugriff für alle, Schreibzugriff nur Admin/Mod)*
 - `#start-hier` – Empfangshalle mit Wegweiser und Erklärung der Foren.
-- `#regelwerk` – Die verbindlichen Server-Regeln (zum Nachlesen).
+- `#regeln` – Die verbindlichen Server-Regeln (zum Nachlesen) — Fassung im Repo: [`regeln.md`](regeln.md).
 - `#ankündigungen` – Wichtige Meldungen von Moderation oder Schülerrat.
 - `#bafög-und-soziales` – Tipps und Links mit festem Disclaimer im Kanalthema: *"Infos von Lernenden für Lernende. Keine Gewähr. Bitte bei offiziellen Stellen prüfen."*
 
