@@ -17,6 +17,7 @@ import os
 import pathlib
 import re
 import time
+import unicodedata
 import urllib.error
 import urllib.request
 import uuid
@@ -111,11 +112,69 @@ def safe(name: str, maxlen: int = 120) -> str:
 
 
 def norm_title(s: str) -> str:
-    """Für Dublettenvergleich: klein, Umlaute gefaltet, nur Alnum."""
-    s = s.lower()
+    """Für Dublettenvergleich: klein, Umlaute gefaltet, nur Alnum.
+
+    Unicode zuerst auf NFC normalisieren: macOS-Dateinamen kommen zerlegt an
+    (u + Trema), dann greift die Umlaut-Faltung nicht mehr und derselbe Titel
+    wäre für den Vergleich ein anderer — Titel-Dubletten blieben unentdeckt.
+    """
+    s = unicodedata.normalize("NFC", s or "").lower()
     for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
         s = s.replace(a, b)
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
+# Ein Titel sagt, WAS drinsteht. Behälter-Wörter sagen nur, WO es liegt
+# (`Mitschriften`, `Online - Aufgaben`, `Common mistakes`) — solche Titel sind
+# nicht zielführend und wurden auf Wunsch aufgeräumt (siehe sammeltitel_umbau.py).
+# Ein Titel gilt als Sammel-Titel, wenn er ein Behälter-Wort enthält und KEIN
+# Fachwort. Eine Stelle für alle Skripte, damit Regel und Prüfung gleich sind.
+SAMMEL_WOERTER = [
+    r"mitschriften?", r"online\s*-?\s*aufgaben?", r"ue?bungs?aufgaben?", r"aufgaben",
+    r"sonstiges?", r"verschiedenes?", r"diverses?", r"sammlung", r"unterlagen",
+    r"material(ien)?", r"(alte\s+)?tests?", r"klausuren?", r"hefter", r"mappe",
+    # "grammar" NICHT hier: `Grammar - G6 - Relativsätze` ist ein guter Titel, das
+    # Wort allein macht ihn nicht unspezifisch (früherer Fehlalarm).
+    r"common\s+mistakes", r"ue?bungen", r"und\s+eb", r"pruefungen?",
+]
+FACH_WOERTER = [
+    r"zytolog|zelle|mitose|meiose|genetik|oekologie|oekosystem|dna|protein|enzym|membran|zellkern|woese|endosymbio",
+    r"atombau|periodensystem|bindung|reaktion|rechnen|stoe|chiometrie|saeure|basen|salze|organisch|alkan|alken|alkohol",
+    r"kinematik|dynamik|newton|schwingung|welle|optik|brechung|reflexion|linse|elektri|ladung|spannung|widerstand|energie|impuls|masse",
+    r"logarithm|potenz|funktion|gleichung|stochastik|wahrscheinlich|vektor|geometrie|bruch|term|grenzwert|ableitung|integral|trigonometrie",
+    r"revolution|absolutismus|aufklaerung|biedermeier|vormaerz|restauration|nationalismus|imperialismus|weimar|kaiserreich|buerger|kalter\s+krieg|diktatur|demokratie|antike|mittelalter|rom|staat",
+    # "relativs" statt "relativsatz": der gefaltete Titel heißt "relativsaetze" —
+    # ein Muster in der Grundform trifft die Mehrzahl nicht.
+    r"sprache|wortart|satzbau|relativs|gerund|modal|adjektiv|adverb|zeiten|tense|conditional|passive|summary|presentation|visual|unit",
+    r"faust|medea|maria\s+stuart|lyrik|gedicht|epoche|barock|sturm|reim|rhetorik|rede|shakespeare|literatur|sprachmodelle|buehler|saussure",
+    r"karte|atlas|stadt|land|bevoelkerung|kozone|wirtschaft|sozial|klima|naturraum|auswertung|grosslandschaft",
+    r"utilitarismus|aristoteles|mesotes|moral|tugend|kant|pflicht|gerechtigkeit",
+    r"vokabel|verbe|article|grammatik|alphabet|zahlen|salutation|musee|voyage|ville|mode",
+    # Nachtrag, aus den 449 echten Thread-Titeln abgeleitet: Fachwörter, die fehlten
+    # und gute Titel fälschlich als Sammel-Titel erscheinen ließen
+    # (`Test Biologie: Kreuzungsschema`, `Aufgabenblätter Analysis`, `Test: Bewegungsdiagramme`).
+    r"kreuzung|stammbaum|wirbeltier|samenpflanz|fotosynthese|amphib|feuchtluft|stofftransport"
+    r"|korrosion|oxid|metallbindung|elektron|salz"
+    r"|bewegungsdiagramm|geschwindigkeit|beschleunigung|kreisbeweg|strahlen|freier fall"
+    r"|ausklammern|binomisch|differenz|tangente|flaeche|geraden|ebenen|steckbrief|analysis"
+    r"|abitur|koordinaten|parameterform|einheiten"
+    r"|zeitform|conditional|\bif\b|vocabulary|habits|industrialisierung|soziale frage"
+    r"|ethik|erdaufbau|plattengrenz|magmatis|vulkan|gestein",
+]
+
+
+def ist_sammeltitel(titel: str) -> bool:
+    """Titel ohne Fachwort, nur Behälter-Wort -> nicht zielführend, umbenennen.
+
+    Der Titel läuft durch norm_title: Umlaute gefaltet und Kleinschreibung.
+    Sonst greifen die Muster nicht, weil sie in ASCII geschrieben sind
+    ("oekologie" muss auf "Ökologie" passen) — und ein Fachwort, das nicht
+    erkannt wird, macht aus einem guten Titel fälschlich einen Sammel-Titel.
+    """
+    t = norm_title(titel)
+    if any(re.search(g, t) for g in FACH_WOERTER):
+        return False
+    return any(re.search(b, t) for b in SAMMEL_WOERTER)
 
 
 class Client:

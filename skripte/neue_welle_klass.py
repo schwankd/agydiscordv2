@@ -28,7 +28,7 @@ PROJECT = S.parent
 sys.path.insert(0, str(S))
 import classify                                     # noqa: E402
 from add_material import foren, resolve             # noqa: E402
-from agy_discord import ATTACH_EXT, IMG_EXT         # noqa: E402
+from agy_discord import ATTACH_EXT, IMG_EXT, ist_sammeltitel   # noqa: E402
 from neue_welle_plan import art_von                 # noqa: E402
 
 BUNDLEBAR = {".pdf"} | IMG_EXT          # alles andere: Original als eigener Post
@@ -97,15 +97,18 @@ def main() -> int:
         if ziel != basis:
             g["stufen_hinweis"][ziel] += 1
         ziel = basis                              # Entscheidung: alles E-Phase
-        # Dateien direkt im Fach-Ordner haben kein Thema im Pfad. Ein Thread namens
-        # "(ohne Unterordner)" wäre Unsinn — dann benennt die Datei den Thread.
-        if list(thema_pfad) == ["(ohne Unterordner)"]:
+        titel = titel_von(list(thema_pfad))
+        # Zwei Fälle, in denen der Ordnername den Thread nicht benennen darf:
+        #   (a) Dateien direkt im Fach-Ordner -> "(ohne Unterordner)" wäre Unsinn,
+        #   (b) Behälter-Name wie "Mitschriften" / "Online - Aufgaben" / "Common
+        #       mistakes" sagt nichts über den Inhalt (Domenics Auftrag; die erste
+        #       Welle wurde dafür nachträglich aufgeräumt, siehe sammeltitel_umbau.py).
+        # In beiden Fällen benennen die Dateien den Thread.
+        if ist_sammeltitel(titel) or list(thema_pfad) == ["(ohne Unterordner)"]:
             alle = [n for _, n in g["buendel"]] + [n for _, n in g["einzeln"]]
             stamm = pathlib.Path(alle[0]).stem if alle else fach
             titel = stamm if len(alle) == 1 else f"{stamm} (+{len(alle) - 1} weitere)"
             titel = titel[:100]
-        else:
-            titel = titel_von(list(thema_pfad))
         namen = [n for _, n in g["buendel"]] + [n for _, n in g["einzeln"]]
         art = art_von(namen, titel)
         notiz = f"aus {fach}/{ '/'.join(thema_pfad) }"
