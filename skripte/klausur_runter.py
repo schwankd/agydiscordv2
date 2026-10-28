@@ -40,8 +40,8 @@ ZIEL = pathlib.Path.home() / "Desktop" / "AGY-manuell-schwaerzen"
 ORDNER = ZIEL / "01_schwaerzen"
 TAG = "Klausur/Test"
 LISTE = PRUEF / "klausur_posts.csv"
-COLS = ["forum", "titel", "art", "thread_id", "erstellt", "nachrichten", "fremde",
-        "originaldatei", "dateiname_zum_schwaerzen", "bytes", "lokal", "url"]
+COLS = ["forum", "titel", "art", "thread_id", "guild_id", "erstellt", "nachrichten",
+        "fremde", "originaldatei", "dateiname_zum_schwaerzen", "bytes", "lokal", "url"]
 
 
 def guild_of(client: Client, channel_id: str) -> str:
@@ -63,6 +63,7 @@ def finde_threads(client: Client) -> list[dict]:
         for t in client.forum_threads(info["id"], guild):
             if tag_id in (t.get("applied_tags") or []):
                 t["_forum"] = forum
+                t["_guild"] = guild
                 treffer.append(t)
     return treffer
 
@@ -76,6 +77,7 @@ def sammle(client: Client, threads: list[dict]) -> list[dict]:
         anhaenge = [a for m in nachrichten for a in m.get("attachments", [])]
         basis = {
             "forum": t["_forum"], "titel": t["name"], "art": TAG, "thread_id": t["id"],
+            "guild_id": t.get("_guild", ""),
             "erstellt": (t.get("thread_metadata") or {}).get("create_timestamp", ""),
             "nachrichten": len(nachrichten), "fremde": len(fremde),
         }
@@ -269,8 +271,10 @@ def main() -> int:
         w.writerow(["thread_id", "forum", "titel", "aktion", "url"])
         for tid, z in ziele.items():
             aktion = "deleted" if tid in entfernt else "behalten (fremde Nachrichten)"
+            # Server-Kennung aus der Zeile, NICHT nachfragen: ein gelöschter
+            # Thread antwortet mit 404 und würde das Ergebnis unschreibbar machen.
             w.writerow([tid, z["forum"], z["titel"], aktion,
-                        f"https://discord.com/channels/{guild_of(client, tid)}/{tid}"])
+                        f"https://discord.com/channels/{z.get('guild_id', '')}/{tid}"])
     print(f"\n  {len(entfernt)} von {len(ziele)} Threads entfernt")
     if geskippt:
         print(f"  {len(geskippt)} behalten (fremde Nachrichten)")
