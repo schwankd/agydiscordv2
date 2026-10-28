@@ -1,5 +1,11 @@
 """Dateien zum MANUELLEN Schwärzen auf den Desktop legen.
 
+VERALTET — benutze `klausur_runter.py --holen`. Dieses Skript baut die Mappe aus
+den Manifesten und kennt darum nur die Dateien, die noch in `sortiert/` liegen;
+die vollständige Menge steht im Server (Tag `Klausur/Test`), und die holt
+`klausur_runter.py`. Beide schreiben dieselbe Mappe
+(`~/Desktop/AGY-manuell-schwaerzen`) — nur letzteres ist die Wahrheit.
+
 Je Klausur/Test-Post eine Kopie, im Namen das Ziel-Forum vorangestellt
 (`<forum>__<datei>.pdf`) — daran finde ich später beim Posten wieder, wohin
 jede Datei gehört, auch wenn Domenic die Datei neu speichert. Dazu eine Liste
