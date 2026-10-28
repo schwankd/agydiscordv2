@@ -71,10 +71,17 @@ def kurs_of(ziel: str) -> str:
 
 
 def load_kept(match: str) -> list[dict]:
-    """Indexierte Dateiliste nach Content-Dedup (nie nach Dateiname!)."""
+    """Indexierte Dateiliste nach Content-Dedup (nie nach Dateiname!).
+
+    Der Match prüft Kanal **oder Server** — dieselbe Regel wie extract_text.py.
+    Nur auf den Kanal zu prüfen liefert für `--match neu` eine leere Liste, weil
+    dort das Ziel-Forum steht (`biologie`) und der Herkunftswert in `server`
+    (`neu (direkt)`). Genau daran wäre die ganze neue Welle hängengeblieben.
+    """
     raw = json.loads((PROJECT / f"_text_{match}.json").read_text(encoding="utf-8"))
     # Container (.zip) sind hier nicht enthalten — extract_text.py schließt sie aus.
-    data = [r for r in raw if match.lower() in r["kanal"].lower()]
+    m = match.lower()
+    data = [r for r in raw if m in r["kanal"].lower() or m in (r.get("server") or "").lower()]
     for r in data:
         p = pathlib.Path(r["pfad"])
         r["hash"] = hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else "?"
@@ -205,6 +212,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--match", required=True)
     ap.add_argument("--list", action="store_true")
+    ap.add_argument("--dir", default=None,
+                    help="Ausgabeordner statt sortiert/ — PFLICHT für eine neue Welle: "
+                         "sonst räumt der Lauf die Archiv-Dateien aller betroffenen Fächer weg")
     args = ap.parse_args()
     kept = load_kept(args.match)
 
@@ -218,21 +228,22 @@ def main() -> int:
     spec_path = PROJECT / f"_klass_{args.match}.json"
     posts = json.loads(spec_path.read_text(encoding="utf-8"))
 
-    SORTIERT.mkdir(parents=True, exist_ok=True)
+    out_dir = pathlib.Path(args.dir).resolve() if args.dir else SORTIERT
+    out_dir.mkdir(parents=True, exist_ok=True)
     # Nur die Dateien DIESES Fachs ersetzen — andere Wellen bleiben liegen.
     faecher = {slug(z.split("-")[0].capitalize())
                for p in posts for z in (p.get("ziele") or [p["ziel"]])}
-    old = [p for p in SORTIERT.glob("*.pdf") if p.name.split("_")[0] in faecher]
+    old = [p for p in out_dir.glob("*.pdf") if p.name.split("_")[0] in faecher]
     for p in old:
         p.unlink()
     if old:
-        print(f"sortiert/: {len(old)} Datei(en) dieses Fachs ersetzt")
+        print(f"{out_dir.name}/: {len(old)} Datei(en) dieses Fachs ersetzt")
 
     def freier_name(basis: str, endung: str) -> pathlib.Path:
-        dest = SORTIERT / f"{basis}{endung}"
+        dest = out_dir / f"{basis}{endung}"
         n = 2
         while dest.exists():
-            dest = SORTIERT / f"{basis}-{n}{endung}"
+            dest = out_dir / f"{basis}-{n}{endung}"
             n += 1
         return dest
 
@@ -313,7 +324,7 @@ def main() -> int:
     # PDFs können komprimiert werden (Ziel SAFE); Original-Anhänge (Office, Medien)
     # nicht — für sie gilt das echte Discord-Limit.
     over = [r for r in rows
-            if (SORTIERT / r["datei"]).stat().st_size
+            if (out_dir / r["datei"]).stat().st_size
             > (LIMIT if pathlib.Path(r["datei"]).suffix.lower() != ".pdf" else SAFE)]
     print(f"\n{len(rows)} Zeilen -> " + ", ".join(o.name for o in outs))
     print(f"Dateien > 10 MB: {len(over)}" + (f" {[r['datei'] for r in over]}" if over else ""))
