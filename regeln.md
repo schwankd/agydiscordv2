@@ -47,7 +47,7 @@ politischen oder religiösen Werbebotschaften, keine NSFW-Inhalte.
 
 - Wer ein **nicht anonymisiertes** Dokument entdeckt (Name, Note, Foto, Chat, Klasseliste),
   verbreitet es nicht weiter, kommentiert es nicht — sondern meldet es.
-- Meldeweg: `@Moderation` bzw. `@Schülerrat` in `#allgemein` oder per DM an die Moderation.
+- Meldeweg: `@Moderator` bzw. `@Schülerrat` in `#allgemein` oder per DM an die Moderation.
 - Meldende bleiben anonym. Die Moderation entfernt oder schwärzt das Dokument.
 - Lieber einmal zu viel melden als einmal zu wenig.
 

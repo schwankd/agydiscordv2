@@ -21,6 +21,7 @@ RULES_FILE = pathlib.Path(__file__).resolve().parent.parent / "regeln.md"
 GUILD_NAME = "Abendschule Dresden"
 CHANNEL = "regeln"
 LINK_ALLGEMEIN = "#allgemein"     # wird zur Kanal-Verlinkung aufgelöst
+ROLE_LINKS = ("Moderator", "Schülerrat")   # `@Name` im Text wird zur echten Rollen-Erwähnung
 LIMIT = 2000                       # Discord-Nachrichtenlimit
 
 
@@ -40,11 +41,15 @@ def unwrap(raw: str) -> str:
     return "\n".join(out)
 
 
-def discord_text(mention: str) -> str:
+def discord_text(mention: str, rollen: dict[str, str] | None = None) -> str:
     raw = unwrap(RULES_FILE.read_text(encoding="utf-8"))
     body = raw[raw.index("## §"):]
     body = "\n".join(line for line in body.split("\n") if line.strip() != "---").strip()
     body = body.replace(f"`{LINK_ALLGEMEIN}`", mention)
+    # `@Rollenname` -> echte Erwähnung. Im Markdown bleibt der Name lesbar; ohne
+    # passende Rolle bleibt der Text stehen, statt eine kaputte Erwähnung zu senden.
+    for name, rid in (rollen or {}).items():
+        body = body.replace(f"`@{name}`", f"<@&{rid}>")
     return "📜 **Server-Regeln**\n\n" + body
 
 
@@ -74,8 +79,8 @@ def pack(blocks: list[str], limit: int = LIMIT) -> list[str]:
     return [f"{p}\n\n*({i}/{len(parts)})*" for i, p in enumerate(parts, 1)] if len(parts) > 1 else parts
 
 
-def resolve(client: A.Client) -> tuple[str, str, str]:
-    """(guild_id, regeln_id, allgemein_id) zur Laufzeit auflösen.
+def resolve(client: A.Client) -> tuple[str, str, str, dict[str, str]]:
+    """(guild_id, regeln_id, allgemein_id, rollen) zur Laufzeit auflösen.
 
     Der Server wird über seinen Namen gesucht, fällt aber auf den einzigen Server
     zurück, in dem der Bot ist — der Name hat sich schon einmal geändert, und ein
@@ -91,13 +96,18 @@ def resolve(client: A.Client) -> tuple[str, str, str]:
     for need in (CHANNEL, LINK_ALLGEMEIN.lstrip("#")):
         if need not in chans:
             raise A.DiscordError(f"Kanal '#{need}' nicht gefunden")
-    return gid, chans[CHANNEL], chans[LINK_ALLGEMEIN.lstrip("#")]
+    rollen = {r["name"]: r["id"] for r in client.get(f"/guilds/{gid}/roles")
+              if r["name"] in ROLE_LINKS}
+    fehlend = [n for n in ROLE_LINKS if n not in rollen]
+    if fehlend:
+        print(f"  !! Rolle(n) im Server nicht gefunden: {fehlend}", file=sys.stderr)
+    return gid, chans[CHANNEL], chans[LINK_ALLGEMEIN.lstrip("#")], rollen
 
 
 def main() -> int:
     c = A.Client(A.get_token("AGY_TOKEN_NEU"))
-    _gid, regeln_id, allgemein_id = resolve(c)
-    parts = pack(sections(discord_text(f"<#{allgemein_id}>")))
+    _gid, regeln_id, allgemein_id, rollen = resolve(c)
+    parts = pack(sections(discord_text(f"<#{allgemein_id}>", rollen)))
     for i, p in enumerate(parts, 1):
         print(f"Teil {i}: {len(p)} Zeichen")
     if "--dry-run" in sys.argv:
