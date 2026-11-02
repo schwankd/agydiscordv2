@@ -63,7 +63,10 @@ politischen oder religiösen Werbebotschaften, keine NSFW-Inhalte.
 
 - Lerninhalte ausschließlich in die Fach-Foren; pro Thema ein Beitrag, bestehende Threads
   nutzen.
-- Tags sind Pflicht (Fach/Kurs/Art).
+- Fach und Kursstufe stecken im Forum, nicht in einem Tag (`mathematik-gk`, `deutsch-lk`,
+  `geschichte` = E-Phase).
+- Jeder Beitrag bekommt genau einen Tag nach der Art des Materials: `Zusammenfassung`,
+  `Klausur/Test`, `Hausaufgabe` oder `Sonstiges`.
 
 ## §8 Konsequenzen
 

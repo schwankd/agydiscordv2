@@ -75,11 +75,18 @@ def pack(blocks: list[str], limit: int = LIMIT) -> list[str]:
 
 
 def resolve(client: A.Client) -> tuple[str, str, str]:
-    """(guild_id, regeln_id, allgemein_id) zur Laufzeit auflösen."""
-    guilds = [g for g in client.get("/users/@me/guilds") if g["name"] == GUILD_NAME]
-    if len(guilds) != 1:
-        raise A.DiscordError(f"Server '{GUILD_NAME}' nicht eindeutig gefunden: {[g['name'] for g in guilds]}")
-    gid = guilds[0]["id"]
+    """(guild_id, regeln_id, allgemein_id) zur Laufzeit auflösen.
+
+    Der Server wird über seinen Namen gesucht, fällt aber auf den einzigen Server
+    zurück, in dem der Bot ist — der Name hat sich schon einmal geändert, und ein
+    umbenannter Server darf das Posten der Regeln nicht blockieren.
+    """
+    guilds = client.get("/users/@me/guilds")
+    treffer = [g for g in guilds if g.get("name") == GUILD_NAME] or guilds
+    if len(treffer) != 1:
+        raise A.DiscordError(f"Server nicht eindeutig: {[g['name'] for g in treffer]} — "
+                             f"erwartet '{GUILD_NAME}', sonst genau einen Server")
+    gid = treffer[0]["id"]
     chans = {c["name"]: c["id"] for c in client.get(f"/guilds/{gid}/channels")}
     for need in (CHANNEL, LINK_ALLGEMEIN.lstrip("#")):
         if need not in chans:
@@ -111,6 +118,18 @@ def main() -> int:
         lines = back["content"].splitlines()
         print(f"verifiziert Teil {i}: {len(back['content'])} Zeichen | {back['author']['username']} | "
               f"{lines[0][:30]!r} … {lines[-1][:40]!r}")
+
+    # Alte Fassung entfernen, sonst stehen zwei Regelwerke im Kanal. Nur eigene
+    # Nachrichten des Bots, und erst nachdem die neuen gelesen zurückkamen.
+    if "--ersetzen" in sys.argv:
+        ich = c.get("/users/@me")["id"]
+        alt = [m["id"] for m in c.all_messages(regeln_id, pause=0.1)
+               if m["id"] not in ids and (m.get("author") or {}).get("id") == ich]
+        for mid in alt:
+            c.request("DELETE", f"/channels/{regeln_id}/messages/{mid}")
+            print(f"alte Fassung gelöscht: {mid}")
+        rest = [m["id"] for m in c.all_messages(regeln_id, pause=0.1)]
+        print(f"#regeln enthält jetzt {len(rest)} Nachricht(en): {rest}")
     return 0
 
 
