@@ -1,4 +1,4 @@
-# Server-Regeln — AGY Discord (Abendschule Dresden)
+# Server-Regeln — AGY Discord (Abendgymnasium Dresden)
 
 Verbindliche Regeln des inoffiziellen Discord-Servers für Lernende des Abendgymnasiums
 Dresden. Stand: 28.10.2026.

@@ -18,7 +18,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import agy_discord as A  # noqa: E402
 
 RULES_FILE = pathlib.Path(__file__).resolve().parent.parent / "regeln.md"
-GUILD_NAME = "Abendschule Dresden"
+GUILD_NAME = "Abendgymnasium Dresden"
 CHANNEL = "regeln"
 LINK_ALLGEMEIN = "#allgemein"     # wird zur Kanal-Verlinkung aufgelöst
 ROLE_LINKS = ("Moderator", "Schülerrat")   # `@Name` im Text wird zur echten Rollen-Erwähnung

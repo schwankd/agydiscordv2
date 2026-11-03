@@ -53,7 +53,7 @@ def main() -> int:
                     help="Thread mit den Banknoten-Fotos entfernen (nicht Schulinhalt)")
     args = ap.parse_args()
 
-    guild = _env_id("GUILD", "Server „Abendschule Dresden“")
+    guild = _env_id("GUILD", "Server „Abendgymnasium Dresden“")
     nano_alt = _env_id("NANO_ALT", "Thread biologie-gk, enthält beide Seiten")
     bank_alt = _env_id("BANK_ALT", "Thread englisch-lk, nur Banknoten-Fotos")
 
